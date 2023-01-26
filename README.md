@@ -1,2 +1,221 @@
-# utilihive-backend-stub-sftp-server
-SFTP backend stub
+# Utilihive SFTP Server Stub
+
+SFTP Server Stub runs an in-memory SFTP server while your tests are running.
+It uses the SFTP server of the
+[Apache SSHD](http://mina.apache.org/sshd-project/index.html) project.
+It is made to simplify functional testing of [flows](https://docs.utilihive.io/utilihive-integration/core-concepts/flows)
+written for [Utilihive flow-server](https://docs.utilihive.io/utilihive-integration/core-concepts/flow-server)
+by providing a mock/stub of a SFTP server and basic functions for manipulating files on it.
+However, it is not dependent on Utilihive platform and can be used independently.
+
+SFTP Server Stub is published under the
+[MIT license](http://opensource.org/licenses/MIT) and is originally based on Stefan Birkner's
+[Fake SFTP Server Lambda](https://github.com/stefanbirkner/fake-sftp-server-lambda),
+although it was rewritten to Kotlin. It requires at least JDK 11.
+
+
+## Installation
+
+SFTP Server Stub is available from
+[Maven Central](https://search.maven.org/#search|ga|1|utilihive-backend-stub-sftp).
+
+    <dependency>
+      <groupId>com.greenbird.utilihive.stubs</groupId>
+      <artifactId>utilihive-backend-stub-sftp-server</artifactId>
+      <version>1.0.0</version>
+      <scope>test</scope>
+    </dependency>
+
+
+## Usage
+
+SFTP Server Stub is used by wrapping your test code with the method
+`withSftpServer`.
+
+    import com.greenbird.utilihive.stubs.sftp.SftpServerTestContext.Companion.withSftpServer
+
+    class TestClass {
+      @Test
+      fun someTest() =
+        withSftpServer {
+          //test code
+        }
+    }
+
+`withSftpServer` starts an SFTP server before executing the test code and shuts
+down the server afterwards. The test code uses the provided server object to
+obtain information about the running server or use additional features of Fake
+SFTP Server Lambda.
+
+By default, the SFTP server listens on an auto-allocated port. During the test
+this port can be obtained through field `port` and changed by setting the field
+(if the port is set to zero, random free port is selected and can be read from
+the field). The server is restarted whenever this method is called.
+
+    withSftpServer {
+      port = 1234
+      ...
+    }
+
+You can interact with the SFTP server by using the SFTP protocol with password
+authentication. By default, the server accepts every pair of username and
+password, but you can restrict it to specific pairs.
+
+    withSftpServer {
+      addUser("username", "password")
+      addUser("username2", "password2")
+      ...
+    }
+
+
+### Creating directories
+If you need an empty directory then you can use the method
+`createDirectory(String)` or create multiple directories at once with
+`createDirectories(String...)`.
+
+    withSftpServer {
+      createDirectory("/a/directory")
+      createDirectories(
+        "/another/directory",
+         "/yet/another/directory"
+      )
+      //code that reads from or writes to those directories
+    }
+
+
+### Testing code that reads files
+
+If you test code that reads files from an SFTP server then you need a server
+that provides these files.
+
+    @Test
+    fun testReadingFiles() =
+      withSftpServer {
+        // add text file
+        putFile("/directory/file.txt", "content of file", UTF_8)
+
+        // add binary file from byte array
+        val binaryContent = byteArrayOf(1, 4, 2, 4, 2, 4)
+        putFile("/directory/file.bin", binaryContent)
+
+        // add binary file from input stream
+        val inputStream = getClass().getResourceAsStream("data.bin")
+        putFile("/directory/fileFromInputStream.bin", inputStream)
+
+        //code that reads the file using the SFTP protocol
+      }
+
+### Testing code that writes files
+
+If you test code that writes files to an SFTP server, and then you need to verify
+the upload, use `getFileContent`
+
+    @Test
+    fun testFiles() =
+      withSftpServer {
+        //code that uploads files using the SFTP protocol
+        val textFileContent = getFileContent("/directory/file.txt", UTF_8)
+        val binaryFileContent = getFileContent("/directory/file.bin")
+        //verify files content
+      }
+
+### Testing existence of files
+
+If you want to check whether a file was created or deleted then you can verify
+that it exists or not.
+
+    @Test
+    fun testFile() 
+      withSftpServer {
+        //code that uploads or deletes the file
+        val exists = existsFile("/directory/file.txt");
+        //check value of exists variable
+      }
+    
+
+The method returns `true` if the file exists and is not a directory.
+
+### Delete all files
+
+If you want to reuse the SFTP server then you can delete all files and
+directories on the SFTP  (This is rarely necessary because the method
+`withSftpServer` takes care that it starts and ends with a clean SFTP )
+
+    withSftpServer {
+      // creating files
+      deleteAllFilesAndDirectories()
+      // the rest of the test
+    }
+
+## Usage in flow testing (Utilihive specific)
+Let's assume you have a flow that contains 
+[readFiles](https://docs.utilihive.io/utilihive-integration/writing-testing-flows/processors/read-files/)
+source processor that reads CSV files from SFTP server and processes it
+(typically using [parseCsv](https://docs.utilihive.io/utilihive-integration/writing-testing-flows/processors/parse-csv/)).
+The example shows how to write functional test (using JUnit) that uploads the
+CSV file to the SFTP (which then triggers file ingestion by the in-memory flow-server)
+and asserts that file has been moved from source folder (defined by `path` property)
+to folder for successfully read files (`moveToFolder` property). Typically, you will
+then want to test for what happens with the ingested CSV data further.
+
+Please note that your flow's readFiles processor needs `pollingFrequencySeconds`
+lower than `DEFAULT_TIMEOUT` used in the example otherwise the first file won't
+be read before the test times out.
+
+    // helper extension function to verify source SFTP has moved file from 
+    // 'source' folder over to the 'moveTo' folder
+    // uses org.awaitility:awaitility
+    private fun SftpServerTestContext.assertSourceFileProcessingSucceeded(
+        sourceFileContent: String,
+        sourceFilePath: String,
+        moveToFilePath: String,
+    ) {
+        await().atMost(DEFAULT_TIMEOUT).until {
+            with(this) {
+                existsFile(moveToFilePath) &&
+                        getFileContent(moveToFilePath, UTF_8).contentEquals(sourceFileContent)
+            }
+        }
+        await().atMost(DEFAULT_TIMEOUT).until { !existsFile(sourceFilePath) }
+    }
+
+    @Test
+    fun `WHEN putting file on sftp THEN file is read and moved to a correct directory`(
+        ctx: ConcurrentTestContext
+    ) = withSftpServer {
+        ctx.addFlowTestConfig {
+            resource(...)
+            authConfig(...)
+            flow(mySftpSourceFlow)
+        }
+
+        flowTest(ctx) {
+            val sourceCsvFileContent = "column1;column2\nval1;val2\nval3;val4"
+            createDirectories("source-path", "move-to-path", "error-path")
+            putFile("source-path/test.csv", sourceCsvFileContent, UTF_8)
+
+            logAsserter.awaitEvent {
+                logger = LoggerNames.FLOW_SOURCE
+                flowId = SFTP_SOURCE_FLOW_ID
+                messagePhrase("Received MessageAckDto")
+            }
+
+            assertSourceFileProcessingSucceeded(
+              sourceCsvFileContent,
+              "source-path/test.csv",
+              "move-to-path/test.csv",
+            )
+
+            // some other testing you need to do
+        }
+    }
+## Contributing
+
+If you have a feature request, found a bug or
+simply have a question about SFTP Server Stub.
+
+* [Create an issue](https://github.com/utilihive/utilihive-backend-stub-sftp-server/issues) describing the bug and/or use case.
+* If you have a bug fix, you can create a pull request.
+  (See [Understanding the GitHub Flow](https://guides.github.com/introduction/flow/index.html))
+  In such a case scenario must be covered by a unit test.
+
