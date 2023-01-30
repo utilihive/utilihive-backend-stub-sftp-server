@@ -32,7 +32,8 @@
 
     <scm>
         <connection>scm:git:git://github.com/utilihive/utilihive-backend-stub-sftp-server.git</connection>
-        <developerConnection>scm:git:ssh://github.com:utilihive/utilihive-backend-stub-sftp-server.git</developerConnection>
+        <developerConnection>scm:git:ssh://github.com:utilihive/utilihive-backend-stub-sftp-server.git
+        </developerConnection>
         <url>https://github.com/utilihive/utilihive-backend-stub-sftp-server/tree/main</url>
     </scm>
 
@@ -56,6 +57,7 @@
         <maven-gpg.version>1.6</maven-gpg.version>
         <maven-install-plugin.version>3.1.0</maven-install-plugin.version>
         <maven-source.version>3.2.1</maven-source.version>
+        <maven-surefire.version>3.0.0-M7</maven-surefire.version>
         <memoryfilesystem.version>2.4.0</memoryfilesystem.version>
         <nexus-staging-maven.version>1.6.7</nexus-staging-maven.version>
         <slf4j.version>2.0.1</slf4j.version>
@@ -212,6 +214,11 @@
                     <version>${maven-source.version}</version>
                 </plugin>
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire.version}</version>
+                </plugin>
+                <plugin>
                     <groupId>com.github.ozsie</groupId>
                     <artifactId>detekt-maven-plugin</artifactId>
                     <version>${maven-detekt.version}</version>
@@ -304,6 +311,13 @@
                             <goal>compile</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
                 </executions>
                 <configuration>
                     <args>
@@ -311,6 +325,15 @@
                         <arg>-Werror=${failBuildOnKotlinCompilerWarnings}</arg>
                     </args>
                     <jvmTarget>${jdk.version}</jvmTarget>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/*Test</include>
+                    </includes>
                 </configuration>
             </plugin>
             <plugin>
