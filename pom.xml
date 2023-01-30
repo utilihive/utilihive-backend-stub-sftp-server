@@ -24,7 +24,7 @@
     <developers>
         <developer>
             <name>Greenbird Integration Technology</name>
-            <email>operations@greenbird.com</email>
+            <email>support@greenbird.com</email>
             <organization>Greenbird Integration Technology</organization>
             <organizationUrl>https://www.greenbird.com</organizationUrl>
         </developer>
@@ -37,24 +37,65 @@
     </scm>
 
     <properties>
-        <kotlin.version>1.8.0</kotlin.version>
-        <jdk.version>11</jdk.version>
-        <junit.version>5.9.1</junit.version>
+        <annotations.version>23.1.0</annotations.version>
+        <apache-sshd.version>2.9.2</apache-sshd.version>
         <assertj.version>3.23.1</assertj.version>
-        <slf4j.version>2.0.1</slf4j.version>
-        <memoryfilesystem.version>2.4.0</memoryfilesystem.version>
-        <sshd-sftp.version>2.9.2</sshd-sftp.version>
-        <jsch.version>0.2.6</jsch.version>
         <commons-io.version>2.11.0</commons-io.version>
+        <dokka.version>1.7.20</dokka.version>
+        <hubspot-dependency-management-plugin.version>0.4</hubspot-dependency-management-plugin.version>
+        <jdk.version>11</jdk.version>
+        <jsch.version>0.2.6</jsch.version>
+        <junit.version>5.9.1</junit.version>
+        <kotlin.version>1.8.0</kotlin.version>
+        <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
+        <maven-dependency.version>3.3.0</maven-dependency.version>
+        <maven-deploy-plugin.version>3.0.0</maven-deploy-plugin.version>
+        <maven-detekt.version>1.22.0</maven-detekt.version>
+        <maven-enforcer.version>3.1.0</maven-enforcer.version>
+        <maven-gpg.version>1.6</maven-gpg.version>
+        <maven-install-plugin.version>3.1.0</maven-install-plugin.version>
+        <maven-source.version>3.2.1</maven-source.version>
+        <memoryfilesystem.version>2.4.0</memoryfilesystem.version>
+        <nexus-staging-maven.version>1.6.7</nexus-staging-maven.version>
+        <slf4j.version>2.0.1</slf4j.version>
+        <sonatype-ossindex-maven-enforcer-rules.version>3.2.0</sonatype-ossindex-maven-enforcer-rules.version>
+
+        <!-- Greenbird -->
+        <utilihive-devtools-detekt.version>0.12.0</utilihive-devtools-detekt.version>
+
+        <!-- Maven plugins -->
+        <maven-dependency-plugin.skip>false</maven-dependency-plugin.skip>
+        <maven-dependency-plugin.failOnWarning>true</maven-dependency-plugin.failOnWarning>
+        <maven-dependency-plugin.ignoredUnusedDeclaredDependenciesDefaults>
+            org.jetbrains.kotlin:kotlin-stdlib-jdk8
+        </maven-dependency-plugin.ignoredUnusedDeclaredDependenciesDefaults>
+        <maven-dependency-plugin.runtimeDependencies>
+            org.jetbrains.kotlin:kotlin-stdlib-jdk8,org.junit.jupiter:junit-jupiter,org.junit.jupiter:junit-jupiter-api,org.assertj:assertj-core,commons-io:commons-io,com.github.mwiede:jsch,org.slf4j:slf4j-api,org.slf4j:slf4j-nop
+        </maven-dependency-plugin.runtimeDependencies>
+
+        <!-- Flag indicating if detekt-maven-plugin should be run -->
+        <detekt-maven-plugin.skip>false</detekt-maven-plugin.skip>
+        <!-- Flag indicating whether to fail builds if Detekt finds issues -->
+        <failBuildOnMaxDetektIssuesReached>true</failBuildOnMaxDetektIssuesReached>
+        <failBuildOnKotlinCompilerWarnings>true</failBuildOnKotlinCompilerWarnings>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <dependencyManagement/>
+
     <dependencies>
+        <!-- Kotlin -->
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
             <version>${kotlin.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>${annotations.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.github.marschall</groupId>
             <artifactId>memoryfilesystem</artifactId>
@@ -62,8 +103,18 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sshd</groupId>
+            <artifactId>sshd-common</artifactId>
+            <version>${apache-sshd.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sshd</groupId>
+            <artifactId>sshd-core</artifactId>
+            <version>${apache-sshd.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sshd</groupId>
             <artifactId>sshd-sftp</artifactId>
-            <version>${sshd-sftp.version}</version>
+            <version>${apache-sshd.version}</version>
         </dependency>
 
         <!-- Testing -->
@@ -134,11 +185,71 @@
                 <filtering>true</filtering>
             </resource>
         </resources>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>${maven-dependency.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>${maven-deploy-plugin.version}</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>${maven-install-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${maven-source.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>com.github.ozsie</groupId>
+                    <artifactId>detekt-maven-plugin</artifactId>
+                    <version>${maven-detekt.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.jetbrains.dokka</groupId>
+                    <artifactId>dokka-maven-plugin</artifactId>
+                    <version>${dokka.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-maven-plugin</artifactId>
+                    <version>${kotlin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>${maven-enforcer.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>${maven-gpg.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>${nexus-staging-maven.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
         <plugins>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
-                <version>${kotlin.version}</version>
                 <executions>
                     <execution>
                         <id>compile</id>
@@ -149,6 +260,10 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <args>
+                        <arg>-java-parameters</arg>
+                        <arg>-Werror=${failBuildOnKotlinCompilerWarnings}</arg>
+                    </args>
                     <jvmTarget>${jdk.version}</jvmTarget>
                 </configuration>
             </plugin>
@@ -158,7 +273,107 @@
                 <configuration>
                     <source>${jdk.version}</source>
                     <target>${jdk.version}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.sonatype.ossindex.maven</groupId>
+                        <artifactId>ossindex-maven-enforcer-rules</artifactId>
+                        <version>${sonatype-ossindex-maven-enforcer-rules.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.hubspot.maven.plugins</groupId>
+                        <artifactId>dependency-management-plugin</artifactId>
+                        <version>${hubspot-dependency-management-plugin.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>vulnerability-checks</id>
+                        <!--
+                            Using phase "process-sources" instead of "validate" to run the enforcer in a later phase
+                            than the versions plugin which runs under "validate". This enables us to run
+                            "mvn -U validate" to pull in new parent POMs with updated enforcer rules and
+                            dependencies without the enforcer failing on the current rules and dependencies.
+                         -->
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <fail>true</fail>
+                            <rules>
+                                <!-- Security scanning -->
+                                <banVulnerable
+                                        implementation="org.sonatype.ossindex.maven.enforcer.BanVulnerableDependencies">
+                                    <cvssScoreThreshold>7.0</cvssScoreThreshold>
+                                </banVulnerable>
+                                <!-- Enforce dependency management -->
+                                <dependencyManagementRule
+                                        implementation="com.hubspot.maven.plugins.dependency.management.DependencyManagementRule">
+                                    <requireManagement>
+                                        <dependencies>false</dependencies>
+                                        <plugins>false</plugins>
+                                        <allowVersions>false</allowVersions>
+                                        <allowExclusions>true</allowExclusions>
+                                    </requireManagement>
+                                </dependencyManagementRule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.github.ozsie</groupId>
+                <artifactId>detekt-maven-plugin</artifactId>
+                <configuration>
+                    <configResource>detekt-utilihive-common.yml</configResource>
+                    <buildUponDefaultConfig>true</buildUponDefaultConfig>
+                    <failBuildOnMaxIssuesReached>${failBuildOnMaxDetektIssuesReached}</failBuildOnMaxIssuesReached>
+                    <skip>${detekt-maven-plugin.skip}</skip>
+                    <report>
+                        <report>html:target/detekt-reports/index.html</report>
+                    </report>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.greenbird.utilihive.devtools</groupId>
+                        <artifactId>utilihive-devtools-detekt</artifactId>
+                        <version>${utilihive-devtools-detekt.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>analyze</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>analyze-only</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${maven-dependency-plugin.skip}</skip>
+                            <failOnWarning>${maven-dependency-plugin.failOnWarning}</failOnWarning>
+                            <ignoredUnusedDeclaredDependencies>
+                                ${maven-dependency-plugin.ignoredUnusedDeclaredDependenciesDefaults},${maven-dependency-plugin.runtimeDependencies}
+                            </ignoredUnusedDeclaredDependencies>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -171,7 +386,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>3.2.1</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -182,14 +396,13 @@
                         </executions>
                     </plugin>
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.4.1</version>
+                        <groupId>org.jetbrains.dokka</groupId>
+                        <artifactId>dokka-maven-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>attach-javadocs</id>
+                                <phase>pre-site</phase>
                                 <goals>
-                                    <goal>jar</goal>
+                                    <goal>dokka</goal>
                                 </goals>
                             </execution>
                         </executions>
@@ -197,7 +410,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.6</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -211,7 +423,6 @@
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.7</version>
                         <extensions>true</extensions>
                         <configuration>
                             <serverId>ossrh</serverId>
