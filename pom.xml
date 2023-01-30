@@ -328,7 +328,6 @@
                 <groupId>com.github.ozsie</groupId>
                 <artifactId>detekt-maven-plugin</artifactId>
                 <configuration>
-                    <config>src/main/resources/detekt-utilihive-common.yml</config>
                     <buildUponDefaultConfig>true</buildUponDefaultConfig>
                     <failBuildOnMaxIssuesReached>${failBuildOnMaxDetektIssuesReached}</failBuildOnMaxIssuesReached>
                     <skip>${detekt-maven-plugin.skip}</skip>

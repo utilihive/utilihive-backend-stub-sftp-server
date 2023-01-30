@@ -1,13 +1,17 @@
 package com.greenbird.utilihive.stubs.sftp
 
 import com.greenbird.utilihive.stubs.sftp.SftpServerTestContext.Companion.withSftpServer
-import com.jcraft.jsch.*
+import com.jcraft.jsch.ChannelSftp
+import com.jcraft.jsch.JSch
+import com.jcraft.jsch.JSchException
+import com.jcraft.jsch.Session
+import com.jcraft.jsch.SftpException
 import org.apache.commons.io.IOUtils
-import org.assertj.core.api.Assertions.*
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.assertj.core.api.ThrowableAssert
 import org.junit.jupiter.api.Test
 
-import org.junit.jupiter.api.Assertions.*
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.net.ConnectException
@@ -462,7 +466,7 @@ class SftpServerTestContextTest {
     }
 
     @Test
-    @Suppress("TooGenericExceptionThrown", "SwallowedException")
+    @Suppress("TooGenericExceptionThrown")
     fun `WHEN a test errors THEN SFTP server is shutdown`() {
         val portCapture = AtomicInteger()
         try {
@@ -598,7 +602,7 @@ class SftpServerTestContextTest {
     // Cleanup tests
 
     @Test
-    fun `GIVEN file in root directory WHEN calling deleteAllFilesAndDirectories THEN file in root directory is deleted`() =
+    fun `GIVEN file in root directory WHEN call deleteAllFilesAndDirectories THEN file in root directory is deleted`() =
         withSftpServer {
             uploadFile("/dummy_file.bin", DUMMY_CONTENT)
             deleteAllFilesAndDirectories()
@@ -606,7 +610,7 @@ class SftpServerTestContextTest {
         }
 
     @Test
-    fun `GIVEN file in sub-directory WHEN calling deleteAllFilesAndDirectories THEN file in sub-directory is deleted`() =
+    fun `GIVEN file in sub-directory WHEN call deleteAllFilesAndDirectories THEN file in sub-directory is deleted`() =
         withSftpServer {
             uploadFile("/dummy_directory/dummy_file.bin", DUMMY_CONTENT)
             deleteAllFilesAndDirectories()

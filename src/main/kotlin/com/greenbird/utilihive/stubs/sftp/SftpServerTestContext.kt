@@ -12,7 +12,14 @@ import java.io.Closeable
 import java.io.IOException
 import java.io.InputStream
 import java.nio.charset.Charset
-import java.nio.file.*
+import java.nio.file.FileStore
+import java.nio.file.FileSystem
+import java.nio.file.FileVisitResult
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.PathMatcher
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.WatchService
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.attribute.UserPrincipalLookupService
 import java.nio.file.spi.FileSystemProvider
@@ -42,15 +49,13 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
             return server.port
         }
         /**
-         * Set the port of the SFTP server. The SFTP server is restarted when you call `setPort`.
-         * @param port the port. Must be between 1 and 65535.
-         * @throws IllegalArgumentException if the port is not between 1 and 65535.
+         * Set the port of the SFTP server. The SFTP server is restarted when you change port.
+         * Value 0 means choosing any available port automatically.
+         * @param port the port. Must be between 0 and 65535, where 0 means choose automatically.
+         * @throws IllegalArgumentException if the port is not between 0 and 65535.
          * @throws IllegalStateException if the server cannot be restarted.
          */
         @Suppress("MagicNumber")
-        /**
-         * Sets the port for SFTP server. Value 0 means choosing any available port automatically.
-         */
         set(port) {
             require(port in 0..65535) {
                 ("Port cannot be set to $port because only ports between 0 and 65535 are valid.")
@@ -279,7 +284,6 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
     private fun verifyWithSftpServerIsNotFinished(task: String) =
         check(!withSftpServerFinished) { "Failed to $task because withSftpServer is already finished." }
 
-    @Suppress("TooManyFunctions")
     private class DoNotClose(val fileSystem: FileSystem) : FileSystem() {
         override fun provider(): FileSystemProvider = fileSystem.provider()
 
