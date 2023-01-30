@@ -60,9 +60,6 @@
         <slf4j.version>2.0.1</slf4j.version>
         <sonatype-ossindex-maven-enforcer-rules.version>3.2.0</sonatype-ossindex-maven-enforcer-rules.version>
 
-        <!-- Greenbird -->
-        <utilihive-devtools-detekt.version>0.12.0</utilihive-devtools-detekt.version>
-
         <!-- Maven plugins -->
         <maven-dependency-plugin.skip>false</maven-dependency-plugin.skip>
         <maven-dependency-plugin.failOnWarning>true</maven-dependency-plugin.failOnWarning>
@@ -331,7 +328,7 @@
                 <groupId>com.github.ozsie</groupId>
                 <artifactId>detekt-maven-plugin</artifactId>
                 <configuration>
-                    <configResource>detekt-utilihive-common.yml</configResource>
+                    <config>src/main/resources/detekt-utilihive-common.yml</config>
                     <buildUponDefaultConfig>true</buildUponDefaultConfig>
                     <failBuildOnMaxIssuesReached>${failBuildOnMaxDetektIssuesReached}</failBuildOnMaxIssuesReached>
                     <skip>${detekt-maven-plugin.skip}</skip>
@@ -347,13 +344,6 @@
                         </goals>
                     </execution>
                 </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.greenbird.utilihive.devtools</groupId>
-                        <artifactId>utilihive-devtools-detekt</artifactId>
-                        <version>${utilihive-devtools-detekt.version}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -400,9 +390,10 @@
                         <artifactId>dokka-maven-plugin</artifactId>
                         <executions>
                             <execution>
-                                <phase>pre-site</phase>
+                                <phase>package</phase>
                                 <goals>
                                     <goal>dokka</goal>
+                                    <goal>javadocJar</goal>
                                 </goals>
                             </execution>
                         </executions>
