@@ -8,6 +8,7 @@ import org.apache.sshd.server.auth.password.PasswordAuthenticator
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider
 import org.apache.sshd.server.session.ServerSession
 import org.apache.sshd.sftp.server.SftpSubsystemFactory
+import java.io.ByteArrayInputStream
 import java.io.Closeable
 import java.io.IOException
 import java.io.InputStream
@@ -24,6 +25,8 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.attribute.UserPrincipalLookupService
 import java.nio.file.spi.FileSystemProvider
 import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.text.Charsets.UTF_8
 
 @Suppress("TooManyFunctions")
 class SftpServerTestContext
@@ -38,7 +41,7 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
     private var withSftpServerFinished = false
     private val usernamesAndPasswords: MutableMap<String, String> = HashMap()
 
-    var port: Int
+    val port: Int
         /**
          * Returns the port of the SFTP server.
          *
@@ -48,34 +51,23 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
             verifyWithSftpServerIsNotFinished("call getPort()")
             return server.port
         }
-        /**
-         * Set the port of the SFTP server. The SFTP server is restarted when you change port.
-         * Value 0 means choosing any available port automatically.
-         * @param port the port. Must be between 0 and 65535, where 0 means choose automatically.
-         * @throws IllegalArgumentException if the port is not between 0 and 65535.
-         * @throws IllegalStateException if the server cannot be restarted.
-         */
-        @Suppress("MagicNumber")
-        set(port) {
+
+    companion object {
+        fun withSftpServer(port: Int = 0, block: SftpServerTestContext.() -> Unit) {
+            @Suppress("MagicNumber")
             require(port in 0..65535) {
                 ("Port cannot be set to $port because only ports between 0 and 65535 are valid.")
             }
-            verifyWithSftpServerIsNotFinished("set port")
-            restartServer(port)
-        }
-
-    companion object {
-        fun withSftpServer(block: SftpServerTestContext.() -> Unit) {
             val server = SftpServerTestContext(createFileSystem())
-            server.start(0)
+            server.start(port)
             server.use(block)
         }
 
-        private val RANDOM = Random()
+        private val SEQUENCE = AtomicInteger()
 
-        @Throws(IOException::class)
         private fun createFileSystem(): FileSystem {
-            return MemoryFileSystemBuilder.newLinux().build("SftpServerTestContext-" + RANDOM.nextInt())
+            return MemoryFileSystemBuilder.newLinux().build("SftpServerTestContext-"
+                    + SEQUENCE.incrementAndGet())
         }
     }
 
@@ -93,53 +85,26 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
      * different passwords then the last password is effective.
      * @param username the username.
      * @param password the password for the specified username.
-     * @return the server itself.
+     * @return the current server context.
      */
     fun addUser(username: String, password: String): SftpServerTestContext {
         usernamesAndPasswords[username] = password
         return this
     }
 
-    private fun restartServer(port: Int) =
-        try {
-            server.stop()
-            start(port)
-        } catch (e: IOException) {
-            throw IllegalStateException("The SFTP server cannot be restarted.", e)
-        }
-
     /**
      * Puts a text file to the SFTP folder. The file is available by the specified path.
      * @param path the path to the file
      * @param content the file's content
      * @param encoding the encoding of the file
-     * @throws IOException if the file cannot be written
      */
-    @Throws(IOException::class)
     fun putFile(
         path: String,
         content: String,
-        encoding: Charset
+        encoding: Charset = UTF_8
     ) {
         val contentAsBytes = content.toByteArray(encoding)
-        putFile(path, contentAsBytes)
-    }
-
-    /**
-     * Puts a file to the SFTP folder. The file is available by the specified path.
-     * @param path the path to the file
-     * @param content the file's content
-     * @throws IOException if the file cannot be written
-     */
-    @Throws(IOException::class)
-    fun putFile(
-        path: String,
-        content: ByteArray
-    ) {
-        verifyWithSftpServerIsNotFinished("upload file")
-        val pathAsObject = fileSystem.getPath(path)
-        ensureDirectoryOfPathExists(pathAsObject)
-        Files.write(pathAsObject, content)
+        putFile(path, ByteArrayInputStream(contentAsBytes))
     }
 
     /**
@@ -147,9 +112,7 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
      * path. The file's content is read from an `InputStream`.
      * @param path the path to the file
      * @param inputStream an `InputStream` that provides the file's content
-     * @throws IOException if the file cannot be written or the input stream cannot be read
      */
-    @Throws(IOException::class)
     fun putFile(
         path: String,
         inputStream: InputStream
@@ -163,9 +126,7 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
     /**
      * Creates a directory on the SFTP server.
      * @param path the directory's path
-     * @throws IOException if the directory cannot be created
      */
-    @Throws(IOException::class)
     fun createDirectory(
         path: String
     ) {
@@ -177,9 +138,7 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
     /**
      * Create multiple directories on the SFTP server.
      * @param paths the directories' paths.
-     * @throws IOException if at least one directory cannot be created.
      */
-    @Throws(IOException::class)
     fun createDirectories(
         vararg paths: String
     ) {
@@ -189,26 +148,22 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
 
     /**
      * Gets a text file's content from the SFTP server. The content is decoded
-     * using the specified encoding.
+     * using the specified encoding (UTF-8 if not specified).
      * @param path the path to the file
      * @param encoding the file's encoding
      * @return the content of the text file
-     * @throws IOException if the file cannot be read
      */
-    @Throws(IOException::class)
-    fun getFileContent(
+    fun getFileText(
         path: String,
-        encoding: Charset
-    ): String = getFileContent(path).toString(encoding)
+        encoding: Charset = UTF_8
+    ): String = getFileBytes(path).toString(encoding)
 
     /**
      * Gets a file from the SFTP server.
      * @param path the path to the file
-     * @return the content of the file
-     * @throws IOException if the file cannot be read
+     * @return the byte array with content of the file
      */
-    @Throws(IOException::class)
-    fun getFileContent(
+    fun getFileBytes(
         path: String
     ): ByteArray {
         verifyWithSftpServerIsNotFinished("download file")
@@ -232,10 +187,7 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
 
     /**
      * Deletes all files and directories.
-     * @throws IOException if an I/O error is thrown while deleting the files
-     * and directories
      */
-    @Throws(IOException::class)
     fun deleteAllFilesAndDirectories() {
         for (directory in fileSystem.rootDirectories)
             Files.walkFileTree(directory, object : SimpleFileVisitor<Path>() {
@@ -251,7 +203,6 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
             })
     }
 
-    @Throws(IOException::class)
     private fun start(port: Int): Closeable {
         val server = SshServer.setUpDefaultServer()
         server.port = port
@@ -274,7 +225,6 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
     private fun authenticate(username: String, password: String): Boolean =
         usernamesAndPasswords.isEmpty() || usernamesAndPasswords[username] == password
 
-    @Throws(IOException::class)
     private fun ensureDirectoryOfPathExists(path: Path) {
         val directory = path.parent
         if (directory != null && directory != path.root)
@@ -311,7 +261,6 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
         override fun getUserPrincipalLookupService(): UserPrincipalLookupService =
             fileSystem.userPrincipalLookupService
 
-        @Throws(IOException::class)
         override fun newWatchService(): WatchService = fileSystem.newWatchService()
     }
 

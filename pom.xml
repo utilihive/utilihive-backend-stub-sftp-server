@@ -13,18 +13,9 @@
     <description>Stub for SFTP backend, for use in functional testing of Utilihive integration flows</description>
     <url>https://github.com/utilihive/utilihive-backend-stub-sftp-server</url>
 
-    <licenses>
-        <license>
-            <name>MIT License</name>
-            <url>https://github.com/utilihive/utilihive-backend-stub-sftp-server/blob/main/LICENSE</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
-
     <developers>
         <developer>
             <name>Greenbird Integration Technology</name>
-            <email>support@greenbird.com</email>
             <organization>Greenbird Integration Technology</organization>
             <organizationUrl>https://www.greenbird.com</organizationUrl>
         </developer>

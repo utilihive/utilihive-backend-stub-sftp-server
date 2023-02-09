@@ -13,7 +13,6 @@ import org.assertj.core.api.ThrowableAssert
 import org.junit.jupiter.api.Test
 
 import java.io.ByteArrayInputStream
-import java.io.IOException
 import java.net.ConnectException
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Paths
@@ -25,26 +24,21 @@ class SftpServerTestContextTest {
 
     companion object {
         private val DUMMY_CONTENT: ByteArray = byteArrayOf(1, 4, 2, 4, 2, 4)
-        private const val DUMMY_PORT = 46354
         private val JSCH: JSch = JSch()
         private const val TIMEOUT = 200
     }
 
-    @Throws(JSchException::class)
     private fun SftpServerTestContext.connectToServer(): Session =
         connectToServerAtPort(port)
 
-    @Throws(JSchException::class)
     private fun connectToServerAtPort(port: Int): Session =
         createSessionWithCredentials("dummy user", "dummy password", port)
             .apply { connect(TIMEOUT) }
 
-    @Throws(JSchException::class)
     private fun connectSftpChannel(session: Session): ChannelSftp =
         (session.openChannel("sftp") as ChannelSftp).apply { connect() }
 
 
-    @Throws(JSchException::class)
     private fun SftpServerTestContext.connectAndDisconnect() {
         val session = connectToServer()
         val channel = connectSftpChannel(session)
@@ -52,7 +46,6 @@ class SftpServerTestContextTest {
         session.disconnect()
     }
 
-    @Throws(JSchException::class)
     private fun createSessionWithCredentials(
         username: String,
         password: String,
@@ -62,14 +55,12 @@ class SftpServerTestContextTest {
         setPassword(password)
     }
 
-    @Throws(JSchException::class)
     private fun SftpServerTestContext.createSessionWithCredentials(
         username: String,
         password: String
     ): Session =
         createSessionWithCredentials(username, password, port)
 
-    @Throws(JSchException::class, SftpException::class, IOException::class)
     private fun SftpServerTestContext.downloadFile(
         path: String
     ): ByteArray {
@@ -83,7 +74,6 @@ class SftpServerTestContextTest {
         }
     }
 
-    @Throws(JSchException::class, SftpException::class)
     private fun SftpServerTestContext.uploadFile(
         pathAsString: String,
         content: ByteArray,
@@ -106,7 +96,6 @@ class SftpServerTestContextTest {
         .isInstanceOf(JSchException::class.java)
         .hasMessage("Auth fail for methods 'password,keyboard-interactive,publickey'")
 
-    @Throws(JSchException::class, SftpException::class)
     private fun SftpServerTestContext.assertEmptyDirectory(directory: String) {
         val session = connectToServer()
         val channel = connectSftpChannel(session)
@@ -168,8 +157,7 @@ class SftpServerTestContextTest {
 
     @Test
     fun `WHEN overriding a port THEN a client can connect to the server at the specified port`() =
-        withSftpServer {
-            port = 8394
+        withSftpServer(port = 8394) {
             connectToServerAtPort(8394)
         }
 
@@ -263,36 +251,6 @@ class SftpServerTestContextTest {
     }
 
     @Test
-    fun `WHEN a binary file is put to the root directory by the server THEN object can be read from server`() =
-        withSftpServer {
-            putFile("/dummy_file.bin", DUMMY_CONTENT)
-            val file = downloadFile("/dummy_file.bin")
-            assertThat(file).isEqualTo(DUMMY_CONTENT)
-        }
-
-    @Test
-    fun `WHEN a binary file is put to a directory by the server THEN object can be read from server`() =
-        withSftpServer {
-            putFile("/dummy_directory/dummy_file.bin", DUMMY_CONTENT)
-            val file = downloadFile("/dummy_directory/dummy_file.bin")
-            assertThat(file).isEqualTo(DUMMY_CONTENT)
-        }
-
-    @Test
-    fun `WHEN putting a binary file on the server outside of the lambda THEN exception is thrown`() {
-        val serverCapture = AtomicReference<SftpServerTestContext>()
-        withSftpServer {
-            serverCapture.set(this)
-        }
-        assertThatThrownBy {
-            serverCapture.get().putFile("/dummy_file.bin", DUMMY_CONTENT)
-        }.isInstanceOf(IllegalStateException::class.java)
-            .hasMessage(
-                "Failed to upload file because withSftpServer is already finished."
-            )
-    }
-
-    @Test
     fun `WHEN a file from a stream is put to the root directory by the server THEN object can be read from server`() =
         withSftpServer {
             putFile("/dummy_file.bin", ByteArrayInputStream(DUMMY_CONTENT))
@@ -373,7 +331,7 @@ class SftpServerTestContextTest {
                 "/dummy_directory/dummy_file.txt",
                 "dummy content with umlaut ü".toByteArray(UTF_8)
             )
-            val fileContent = getFileContent("/dummy_directory/dummy_file.txt", UTF_8)
+            val fileContent = getFileText("/dummy_directory/dummy_file.txt", UTF_8)
             assertThat(fileContent).isEqualTo("dummy content with umlaut ü")
         }
 
@@ -388,7 +346,7 @@ class SftpServerTestContextTest {
             serverCapture.set(this)
         }
         assertThatThrownBy {
-            serverCapture.get().getFileContent("/dummy_directory/dummy_file.txt", UTF_8)
+            serverCapture.get().getFileText("/dummy_directory/dummy_file.txt", UTF_8)
         }.isInstanceOf(IllegalStateException::class.java)
             .hasMessage("Failed to download file because withSftpServer is already finished.")
     }
@@ -400,7 +358,7 @@ class SftpServerTestContextTest {
                 "/dummy_directory/dummy_file.bin",
                 DUMMY_CONTENT
             )
-            val fileContent = getFileContent("/dummy_directory/dummy_file.bin")
+            val fileContent = getFileBytes("/dummy_directory/dummy_file.bin")
             assertThat(fileContent).isEqualTo(DUMMY_CONTENT)
         }
 
@@ -415,7 +373,7 @@ class SftpServerTestContextTest {
             serverCapture.set(this)
         }
         assertThatThrownBy {
-            serverCapture.get().getFileContent("/dummy_directory/dummy_file.bin")
+            serverCapture.get().getFileBytes("/dummy_directory/dummy_file.bin")
         }.isInstanceOf(IllegalStateException::class.java)
             .hasMessage("Failed to download file because withSftpServer is already finished.")
     }
@@ -479,25 +437,6 @@ class SftpServerTestContextTest {
         assertConnectionToSftpServerNotPossible(portCapture.get())
     }
 
-    @Test
-    fun `GIVEN running test WHEN a port was changed during test THEN first SFTP server is shutdown`() {
-        val portCapture = AtomicInteger()
-        withSftpServer {
-            portCapture.set(port)
-            port = 0 // random
-        }
-        assertConnectionToSftpServerNotPossible(portCapture.get())
-    }
-
-    @Test
-    fun `GIVEN running test WHEN a port was changed during test THEN second SFTP server is shutdown`() {
-        withSftpServer {
-            port = DUMMY_PORT
-            port = 0 // random
-        }
-        assertConnectionToSftpServerNotPossible(DUMMY_PORT)
-    }
-
 
     // Port selection tests
 
@@ -516,16 +455,9 @@ class SftpServerTestContextTest {
     }
 
     @Test
-    fun `WHEN changing port during a test THEN client can connect to the server at the new port`() =
-        withSftpServer {
-            port = 0 // random
-            connectToServerAtPort(port)
-        }
-
-    @Test
     fun `WHEN setting a negative port THEN correct exception thrown`() {
         assertThatThrownBy {
-            withSftpServer { port = -1 }
+            withSftpServer(port = -1) { }
         }
             .isInstanceOf(IllegalArgumentException::class.java)
             .hasMessage(
@@ -536,8 +468,7 @@ class SftpServerTestContextTest {
     @Test
     fun `WHEN setting zero port THEN port set to random number`() {
         val portCapture = AtomicInteger()
-        withSftpServer {
-            port = 0
+        withSftpServer(port = 0) {
             portCapture.set(port)
         }
         assertThat(portCapture.get()).isBetween(1, 65535)
@@ -547,35 +478,23 @@ class SftpServerTestContextTest {
     fun `WHEN setting port to 1024 THEN server can be run`() {
         // In a perfect world I would test to set port to 1 but the lowest
         // port that can be used by a non-root user is 1024
-        withSftpServer { port = 1024 }
+        withSftpServer(port = 1024) { }
     }
 
     @Test
     fun `WHEN setting port to 65535 THEN server can be run`() =
-        withSftpServer {
-            port = 65535
+        withSftpServer(port = 65535) {
             connectToServerAtPort(65535)
         }
 
     @Test
     fun `WHEN setting port greater than 65535 THEN correct exception thrown`() {
         assertThatThrownBy {
-            withSftpServer { port = 65536 }
+            withSftpServer(port = 65536) {}
         }
             .isInstanceOf(IllegalArgumentException::class.java)
             .hasMessage(
                 "Port cannot be set to 65536 because only ports between 0 and 65535 are valid."
-            )
-    }
-
-    @Test
-    fun `WHEN setting the port outside of the lambda THEN correct exception is thrown`() {
-        val serverCapture = AtomicReference<SftpServerTestContext>()
-        withSftpServer { serverCapture.set(this) }
-        assertThatThrownBy { serverCapture.get().port = DUMMY_PORT }
-            .isInstanceOf(IllegalStateException::class.java)
-            .hasMessage(
-                "Failed to set port because withSftpServer is already finished."
             )
     }
 
