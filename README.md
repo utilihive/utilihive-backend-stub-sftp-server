@@ -1,6 +1,6 @@
 # Utilihive SFTP Server Stub
 
-SFTP Server Stub runs an in-memory SFTP server while your tests are running.
+SFTP Server Stub is a Kotlin based project that runs an in-memory SFTP server while your tests are running.
 It uses the SFTP server of the
 [Apache SSHD](http://mina.apache.org/sshd-project/index.html) project.
 It is made to simplify functional testing of [flows](https://docs.utilihive.io/utilihive-integration/core-concepts/flows)

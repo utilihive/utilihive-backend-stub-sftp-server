@@ -25,6 +25,7 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.attribute.UserPrincipalLookupService
 import java.nio.file.spi.FileSystemProvider
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.text.Charsets.UTF_8
 
@@ -39,11 +40,11 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
 
     private lateinit var server: SshServer
     private var withSftpServerFinished = false
-    private val usernamesAndPasswords: MutableMap<String, String> = HashMap()
+    private val usernamesAndPasswords: MutableMap<String, String> = ConcurrentHashMap()
 
     val port: Int
         /**
-         * Returns the port of the SFTP server.
+         * Return the port of the SFTP server.
          *
          * @return the port of the SFTP server.
          */
@@ -87,15 +88,13 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
      * different passwords then the last password is effective.
      * @param username the username.
      * @param password the password for the specified username.
-     * @return the current server context.
      */
-    fun addUser(username: String, password: String): SftpServerTestContext {
+    fun addUser(username: String, password: String) {
         usernamesAndPasswords[username] = password
-        return this
     }
 
     /**
-     * Puts a text file to the SFTP folder. The file is available by the specified path.
+     * Put a text file to the SFTP folder. The file is available by the specified path.
      * @param path the path to the file
      * @param content the file's content
      * @param encoding the encoding of the file
@@ -110,7 +109,7 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
     }
 
     /**
-     * Puts a file to the SFTP folder. The file is available by the specified
+     * Put a file to the SFTP folder. The file is available by the specified
      * path. The file's content is read from an `InputStream`.
      * @param path the path to the file
      * @param inputStream an `InputStream` that provides the file's content
@@ -126,7 +125,7 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
     }
 
     /**
-     * Creates a directory on the SFTP server.
+     * Create a directory on the SFTP server.
      * @param path the directory's path
      */
     fun createDirectory(
@@ -149,7 +148,7 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
     }
 
     /**
-     * Gets a text file's content from the SFTP server. The content is decoded
+     * Get a text file's content from the SFTP server. The content is decoded
      * using the specified encoding (UTF-8 if not specified).
      * @param path the path to the file
      * @param encoding the file's encoding
@@ -161,7 +160,7 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
     ): String = getFileBytes(path).toString(encoding)
 
     /**
-     * Gets a file from the SFTP server.
+     * Get a file from the SFTP server.
      * @param path the path to the file
      * @return the byte array with content of the file
      */
@@ -174,15 +173,17 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
     }
 
     /**
-     * Converts a path string, or a sequence of strings that when joined form
-     * a path string, to a Path. If more does not specify any elements then
-     * the value of the first parameter is the path string to convert.
-     * If more specifies one or more elements, then each non-empty string,
-     * including first, is considered to be a sequence of name elements (see Path)
+     * Convert a path string, or a sequence of strings that when joined form a path
+     * string, to a `Path` object. That can be used to inspect the filesystem - list
+     * directories, verify file existence, test if a file is regular or directory etc.
+     *
+     * If `more` does not specify any elements then the value of the first parameter is
+     * the path string to convert. If `more` specifies one or more elements, then each
+     * non-empty string, including first, is considered to be a sequence of name elements
      * and is joined to form a path string. Strings are joined using '/' as the separator.
      * For example, if getPath("/foo","bar","gus") is invoked, then the path string
-     * "/foo/bar/gus" is converted to a Path. A Path representing an empty path is returned
-     * if first is the empty string and more does not contain any non-empty strings.
+     * "/foo/bar/gus" is converted to a `Path`. A `Path` representing an empty path is
+     * returned if first is the empty string and more does not contain any non-empty strings.
      */
     fun getPath(first: String, vararg more: String): Path {
         verifyWithSftpServerIsNotFinished("get path")
@@ -190,7 +191,7 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
     }
 
     /**
-     * Deletes all files and directories.
+     * Delete all files and directories.
      */
     fun deleteAllFilesAndDirectories() {
         for (directory in fileSystem.rootDirectories)
@@ -236,7 +237,7 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
     }
 
     private fun verifyWithSftpServerIsNotFinished(task: String) =
-        check(!withSftpServerFinished) { "Failed to $task because withSftpServer is already finished." }
+        check(!withSftpServerFinished) { "Failed to $task because withSftpServer is closed." }
 
     private class DoNotClose(val fileSystem: FileSystem) : FileSystem() {
         override fun provider(): FileSystemProvider = fileSystem.provider()

@@ -250,7 +250,7 @@ class SftpServerTestContextTest {
             )
         }.isInstanceOf(IllegalStateException::class.java)
             .hasMessage(
-                "Failed to upload file because withSftpServer is already finished."
+                "Failed to upload file because withSftpServer is closed."
             )
     }
 
@@ -280,7 +280,7 @@ class SftpServerTestContextTest {
             serverCapture.get().putFile("/dummy_file.bin", ByteArrayInputStream(DUMMY_CONTENT))
         }.isInstanceOf(IllegalStateException::class.java)
             .hasMessage(
-                "Failed to upload file because withSftpServer is already finished."
+                "Failed to upload file because withSftpServer is closed."
             )
     }
 
@@ -299,7 +299,7 @@ class SftpServerTestContextTest {
         withSftpServer { serverCapture.set(this) }
         assertThatThrownBy { serverCapture.get().createDirectory("/a/directory") }
             .isInstanceOf(IllegalStateException::class.java)
-            .hasMessage("Failed to create directory because withSftpServer is already finished.")
+            .hasMessage("Failed to create directory because withSftpServer is closed.")
     }
 
     @Test
@@ -323,7 +323,7 @@ class SftpServerTestContextTest {
                 "/another/directory"
             )
         }.isInstanceOf(IllegalStateException::class.java)
-            .hasMessage("Failed to create directory because withSftpServer is already finished.")
+            .hasMessage("Failed to create directory because withSftpServer is closed.")
     }
 
     // File download tests
@@ -352,7 +352,7 @@ class SftpServerTestContextTest {
         assertThatThrownBy {
             serverCapture.get().getFileText("/dummy_directory/dummy_file.txt", UTF_8)
         }.isInstanceOf(IllegalStateException::class.java)
-            .hasMessage("Failed to download file because withSftpServer is already finished.")
+            .hasMessage("Failed to download file because withSftpServer is closed.")
     }
 
     @Test
@@ -392,7 +392,7 @@ class SftpServerTestContextTest {
         assertThatThrownBy {
             serverCapture.get().getFileBytes("/dummy_directory/dummy_file.bin")
         }.isInstanceOf(IllegalStateException::class.java)
-            .hasMessage("Failed to download file because withSftpServer is already finished.")
+            .hasMessage("Failed to download file because withSftpServer is closed.")
     }
 
     // File Path checks
@@ -405,7 +405,7 @@ class SftpServerTestContextTest {
             serverCapture.get().getPath("/dummy_file.bin")
         }.isInstanceOf(IllegalStateException::class.java)
             .hasMessage(
-                "Failed to get path because withSftpServer is already finished."
+                "Failed to get path because withSftpServer is closed."
             )
     }
 
@@ -539,7 +539,7 @@ class SftpServerTestContextTest {
         assertThatThrownBy { serverCapture.get().port }
             .isInstanceOf(IllegalStateException::class.java)
             .hasMessage(
-                "Failed to call getPort() because withSftpServer is already finished."
+                "Failed to call getPort() because withSftpServer is closed."
             )
     }
 
