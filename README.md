@@ -29,7 +29,7 @@ SFTP Server Stub is available from
 
 ## Usage
 
-SFTP Server Stub is used by wrapping your test code with the method
+SFTP Server Stub is used by wrapping your test code with the function
 `withSftpServer`.
 
     import com.greenbird.utilihive.stubs.sftp.SftpServerTestContext.Companion.withSftpServer
@@ -68,7 +68,7 @@ password, but you can restrict it to specific pairs.
 
 
 ### Creating directories
-If you need an empty directory then you can use the method
+If you need an empty directory then you can use the function
 `createDirectory(String)` or create multiple directories at once with
 `createDirectories(String...)`.
 
@@ -134,7 +134,7 @@ that it exists or not.
 ### Delete all files
 
 If you want to reuse the SFTP server then you can delete all files and
-directories on the SFTP  (This is rarely necessary because the method
+directories on the SFTP  (This is rarely necessary because the function
 `withSftpServer` takes care that it starts and ends with a clean SFTP )
 
     withSftpServer {
