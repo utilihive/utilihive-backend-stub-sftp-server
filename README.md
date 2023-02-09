@@ -9,7 +9,7 @@ by providing a mock/stub of a SFTP server and basic functions for manipulating f
 However, it is not dependent on Utilihive platform and can be used independently.
 
 SFTP Server Stub is published under the
-[MIT license](http://opensource.org/licenses/MIT) and is originally based on Stefan Birkner's
+[Apache license, version 2.0](https://www.apache.org/licenses/LICENSE-2.0) and is originally based on Stefan Birkner's
 [Fake SFTP Server Lambda](https://github.com/stefanbirkner/fake-sftp-server-lambda),
 although it was rewritten to Kotlin. It requires at least JDK 11.
 
@@ -48,12 +48,11 @@ obtain information about the running server or use additional features of Fake
 SFTP Server Lambda.
 
 By default, the SFTP server listens on an auto-allocated port. During the test
-this port can be obtained through field `port` and changed by setting the field
-(if the port is set to zero, random free port is selected and can be read from
-the field). The server is restarted whenever this method is called.
+this port can be read through field `port`. If you need to specify port, you can
+pass a parameter to the builder
 
-    withSftpServer {
-      port = 1234
+    withSftpServer(port = 1234) {
+      println(port) // 1234
       ...
     }
 
@@ -92,11 +91,7 @@ that provides these files.
     fun testReadingFiles() =
       withSftpServer {
         // add text file
-        putFile("/directory/file.txt", "content of file", UTF_8)
-
-        // add binary file from byte array
-        val binaryContent = byteArrayOf(1, 4, 2, 4, 2, 4)
-        putFile("/directory/file.bin", binaryContent)
+        putFile("/directory/file.txt", "content of file")
 
         // add binary file from input stream
         val inputStream = getClass().getResourceAsStream("data.bin")
@@ -108,18 +103,18 @@ that provides these files.
 ### Testing code that writes files
 
 If you test code that writes files to an SFTP server, and then you need to verify
-the upload, use `getFileContent`
+the upload, use `getFileText` or `getFileBytes`
 
     @Test
     fun testFiles() =
       withSftpServer {
         //code that uploads files using the SFTP protocol
-        val textFileContent = getFileContent("/directory/file.txt", UTF_8)
-        val binaryFileContent = getFileContent("/directory/file.bin")
+        val textFileContent = getFileText("/directory/file.txt")
+        val binaryFileContent = getFileBytes("/directory/file.bin")
         //verify files content
       }
 
-### Testing existence of files
+### Testing existence of files and directories, listing
 
 If you want to check whether a file was created or deleted then you can verify
 that it exists or not.
@@ -127,13 +122,14 @@ that it exists or not.
     @Test
     fun testFile() 
       withSftpServer {
-        //code that uploads or deletes the file
-        val exists = existsFile("/directory/file.txt");
-        //check value of exists variable
+        //code that uploads or deletes the files
+        val path = getPath("/directory/file.txt")
+        // now you can test on the path
+        path.exists
+        path.isDirectory
+        path.listDirectoryEntries("*.txt")
       }
     
-
-The method returns `true` if the file exists and is not a directory.
 
 ### Delete all files
 
@@ -152,7 +148,7 @@ Let's assume you have a flow that contains
 [readFiles](https://docs.utilihive.io/utilihive-integration/writing-testing-flows/processors/read-files/)
 source processor that reads CSV files from SFTP server and processes it
 (typically using [parseCsv](https://docs.utilihive.io/utilihive-integration/writing-testing-flows/processors/parse-csv/)).
-The example shows how to write functional test (using JUnit) that uploads the
+The example shows how to write a functional test (using JUnit) that uploads the
 CSV file to the SFTP (which then triggers file ingestion by the in-memory flow-server)
 and asserts that file has been moved from source folder (defined by `path` property)
 to folder for successfully read files (`moveToFolder` property). Typically, you will
@@ -214,7 +210,8 @@ be read before the test times out.
 If you have a feature request, found a bug or
 simply have a question about SFTP Server Stub.
 
-* [Create an issue](https://github.com/utilihive/utilihive-backend-stub-sftp-server/issues) describing the bug and/or use case.
+* [Create an issue](https://github.com/utilihive/utilihive-backend-stub-sftp-server/issues)
+  describing the bug and/or use case.
 * If you have a bug fix, you can create a pull request.
   (See [Understanding the GitHub Flow](https://guides.github.com/introduction/flow/index.html))
   In such a case scenario must be covered by a unit test.
