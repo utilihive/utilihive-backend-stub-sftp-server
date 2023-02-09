@@ -57,11 +57,8 @@
         <!-- Maven plugins -->
         <maven-dependency-plugin.skip>false</maven-dependency-plugin.skip>
         <maven-dependency-plugin.failOnWarning>true</maven-dependency-plugin.failOnWarning>
-        <maven-dependency-plugin.ignoredUnusedDeclaredDependenciesDefaults>
-            org.jetbrains.kotlin:kotlin-stdlib-jdk8
-        </maven-dependency-plugin.ignoredUnusedDeclaredDependenciesDefaults>
         <maven-dependency-plugin.runtimeDependencies>
-            org.jetbrains.kotlin:kotlin-stdlib-jdk8,org.junit.jupiter:junit-jupiter,org.junit.jupiter:junit-jupiter-api,org.assertj:assertj-core,commons-io:commons-io,com.github.mwiede:jsch,org.slf4j:slf4j-api,org.slf4j:slf4j-nop
+            org.junit.jupiter:junit-jupiter,org.slf4j:slf4j-api,org.slf4j:slf4j-nop
         </maven-dependency-plugin.runtimeDependencies>
 
         <!-- Flag indicating if detekt-maven-plugin should be run -->
@@ -421,7 +418,7 @@
                             <skip>${maven-dependency-plugin.skip}</skip>
                             <failOnWarning>${maven-dependency-plugin.failOnWarning}</failOnWarning>
                             <ignoredUnusedDeclaredDependencies>
-                                ${maven-dependency-plugin.ignoredUnusedDeclaredDependenciesDefaults},${maven-dependency-plugin.runtimeDependencies}
+                                ${maven-dependency-plugin.runtimeDependencies}
                             </ignoredUnusedDeclaredDependencies>
                         </configuration>
                     </execution>
