@@ -66,8 +66,10 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
         private val SEQUENCE = AtomicInteger()
 
         private fun createFileSystem(): FileSystem {
-            return MemoryFileSystemBuilder.newLinux().build("SftpServerTestContext-"
-                    + SEQUENCE.incrementAndGet())
+            return MemoryFileSystemBuilder.newLinux().build(
+                "SftpServerTestContext-"
+                        + SEQUENCE.incrementAndGet()
+            )
         }
     }
 
@@ -172,17 +174,19 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
     }
 
     /**
-     * Checks the existence of a file. Returns `true` iff the file exists
-     * and it is not a directory.
-     * @param path the path to the file
-     * @return `true` iff the file exists and it is not a directory
+     * Converts a path string, or a sequence of strings that when joined form
+     * a path string, to a Path. If more does not specify any elements then
+     * the value of the first parameter is the path string to convert.
+     * If more specifies one or more elements, then each non-empty string,
+     * including first, is considered to be a sequence of name elements (see Path)
+     * and is joined to form a path string. Strings are joined using '/' as the separator.
+     * For example, if getPath("/foo","bar","gus") is invoked, then the path string
+     * "/foo/bar/gus" is converted to a Path. A Path representing an empty path is returned
+     * if first is the empty string and more does not contain any non-empty strings.
      */
-    fun existsFile(
-        path: String
-    ): Boolean {
-        verifyWithSftpServerIsNotFinished("check existence of file")
-        val pathAsObject = fileSystem.getPath(path)
-        return Files.exists(pathAsObject) && !Files.isDirectory(pathAsObject)
+    fun getPath(first: String, vararg more: String): Path {
+        verifyWithSftpServerIsNotFinished("get path")
+        return fileSystem.getPath(first, *more)
     }
 
     /**

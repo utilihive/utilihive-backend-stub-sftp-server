@@ -15,10 +15,14 @@ import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
 import java.net.ConnectException
 import java.nio.charset.StandardCharsets.UTF_8
+import java.nio.file.FileSystemException
 import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
+import kotlin.io.path.isRegularFile
 
 class SftpServerTestContextTest {
 
@@ -111,7 +115,7 @@ class SftpServerTestContextTest {
             .hasCauseInstanceOf(ConnectException::class.java)
 
     private fun SftpServerTestContext.assertFileDoesNotExist(path: String) =
-        assertThat(existsFile(path)).isFalse
+        assertThat(getPath(path).exists()).isFalse
 
     private fun SftpServerTestContext.assertDirectoryDoesNotExist(directory: String) {
         val session = connectToServer()
@@ -363,6 +367,19 @@ class SftpServerTestContextTest {
         }
 
     @Test
+    fun `WHEN calling getFileBytes on a directory THEN exception is thrown`() =
+        withSftpServer {
+            uploadFile(
+                "/dummy_directory/dummy_file.bin",
+                DUMMY_CONTENT
+            )
+            assertThatThrownBy {
+                getFileBytes("/dummy_directory/")
+            }.isInstanceOf(FileSystemException::class.java)
+                .hasMessage("/dummy_directory: is not a file")
+        }
+
+    @Test
     fun `GIVEN a binary file is retrieved outside of the lambda THEN exception is thrown`() {
         val serverCapture = AtomicReference<SftpServerTestContext>()
         withSftpServer {
@@ -378,42 +395,50 @@ class SftpServerTestContextTest {
             .hasMessage("Failed to download file because withSftpServer is already finished.")
     }
 
-    // File existence check
+    // File Path checks
 
     @Test
-    fun `GIVEN file exists on the server THEN existsFile returns true`() =
-        withSftpServer {
-            uploadFile("/dummy_directory/dummy_file.bin", DUMMY_CONTENT)
-            val exists = existsFile("/dummy_directory/dummy_file.bin")
-            assertThat(exists).isTrue
-        }
-
-    @Test
-    fun `GIVEN file does not exists on the server THEN existsFile returns false`() =
-        withSftpServer {
-            val exists = existsFile("/dummy_directory/dummy_file.bin")
-            assertThat(exists).isFalse
-        }
-
-    @Test
-    fun `GIVEN a directory exists on the server THEN calling existsFile on it returns false`() =
-        withSftpServer {
-            uploadFile("/dummy_directory/dummy_file.bin", DUMMY_CONTENT)
-            val exists = existsFile("/dummy_directory")
-            assertThat(exists).isFalse
-        }
-
-    @Test
-    fun `WHEN checking a file on the server outside of the lambda THEN exception is thrown`() {
+    fun `WHEN calling getPath on the server outside of the lambda THEN exception is thrown`() {
         val serverCapture = AtomicReference<SftpServerTestContext>()
         withSftpServer { serverCapture.set(this) }
         assertThatThrownBy {
-            serverCapture.get().existsFile("/dummy_file.bin")
+            serverCapture.get().getPath("/dummy_file.bin")
         }.isInstanceOf(IllegalStateException::class.java)
             .hasMessage(
-                "Failed to check existence of file because withSftpServer is already finished."
+                "Failed to get path because withSftpServer is already finished."
             )
     }
+
+    @Test
+    fun `GIVEN file exists on the server WHEN calling getPath THEN correct path is returned`() =
+        withSftpServer {
+            uploadFile("/dummy_directory/dummy_file.bin", DUMMY_CONTENT)
+            val path = getPath("/dummy_directory/dummy_file.bin")
+            assertThat(path.exists()).isTrue
+            assertThat(path.isRegularFile()).isTrue
+            val path2 = getPath("/dummy_directory", "dummy_file.bin")
+            assertThat(path2.exists()).isTrue
+            assertThat(path2.isRegularFile()).isTrue
+        }
+
+    @Test
+    fun `GIVEN directory exists on the server WHEN calling getPath THEN correct path is returned`() =
+        withSftpServer {
+            createDirectories("/dummy_directory")
+            val path = getPath("/dummy_directory")
+            assertThat(path.exists()).isTrue
+            assertThat(path.isRegularFile()).isFalse
+            assertThat(path.isDirectory()).isTrue
+        }
+
+    @Test
+    fun `GIVEN file does not exist on the server WHEN calling getPath THEN path exists is false`() =
+        withSftpServer {
+            val path = getPath("/dummy_directory/dummy_file.bin")
+            assertThat(path.exists()).isFalse
+            assertThat(path.isRegularFile()).isFalse
+        }
+
 
     // Server shutdown tests
     @Test
