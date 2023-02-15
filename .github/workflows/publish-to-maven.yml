@@ -26,6 +26,10 @@ jobs:
           export version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
+          echo ":release-version: $version" > release-version
+          git add release-version
+          git commit -m 'update release-version attribute for README'
+          git push origin main
           git tag -a $version -m "$version"
           git push origin $version
       - name: Publish package
