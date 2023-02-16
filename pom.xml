@@ -22,10 +22,10 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/utilihive/utilihive-backend-stub-sftp-server.git</connection>
-        <developerConnection>scm:git:git://github.com/utilihive/utilihive-backend-stub-sftp-server.git
-        </developerConnection>
-        <url>https://github.com/utilihive/utilihive-backend-stub-sftp-server/tree/main</url>
+        <connection>scm:git:${project.scm.url}</connection>
+        <developerConnection>scm:git:${project.scm.url}</developerConnection>
+        <url>git@github.com:utilihive/utilihive-backend-stub-sftp-server.git</url>
+        <tag>HEAD</tag>
     </scm>
 
     <properties>
@@ -47,6 +47,7 @@
         <maven-enforcer.version>3.1.0</maven-enforcer.version>
         <maven-gpg.version>1.6</maven-gpg.version>
         <maven-install-plugin.version>3.1.0</maven-install-plugin.version>
+        <maven-release.version>3.0.0-M6</maven-release.version>
         <maven-source.version>3.2.1</maven-source.version>
         <maven-surefire.version>3.0.0-M7</maven-surefire.version>
         <memoryfilesystem.version>2.4.0</memoryfilesystem.version>
@@ -195,6 +196,11 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-install-plugin</artifactId>
                     <version>${maven-install-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>${maven-release.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -421,6 +427,14 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <scmCommentPrefix>[ci skip]</scmCommentPrefix>
+                    <tagNameFormat>@{project.version}</tagNameFormat>
+                </configuration>
             </plugin>
         </plugins>
     </build>

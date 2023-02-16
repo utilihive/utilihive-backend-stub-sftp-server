@@ -1,0 +1,27 @@
+name: Release and publish to Maven Central
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[ci skip]')"
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build and Test
+        uses: qcastel/github-actions-maven-cmd@master
+        with:
+          maven-args: "clean install"
+      - name: Release
+        uses: qcastel/github-actions-maven-release@master
+        with:
+          git-release-bot-name: "release-bot"
+          git-release-bot-email: "release-bot@greenbird.com"
+          maven-args: "-P release -Dmaven.javadoc.skip=true -DskipTests -DskipITs -Ddockerfile.skip -DdockerCompose.skip -Dmaven.deploy.skip=false"
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          env:
+            JAVA_HOME: /usr/lib/jvm/java-11-openjdk/

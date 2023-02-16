@@ -1,5 +1,4 @@
 :source-highlighter: rouge
-:highlightjs-languages: kotlin
 :toc:
 
 == Utilihive SFTP Server Stub
