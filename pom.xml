@@ -5,7 +5,7 @@
 
     <groupId>com.greenbird.utilihive.stubs</groupId>
     <artifactId>utilihive-backend-stub-sftp</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Utilihive SFTP Backend Stub</name>
@@ -24,7 +24,7 @@
         <connection>scm:git:${project.scm.url}</connection>
         <developerConnection>scm:git:${project.scm.url}</developerConnection>
         <url>git@github.com:utilihive/utilihive-backend-stub-sftp-server.git</url>
-        <tag>1.0.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <properties>
