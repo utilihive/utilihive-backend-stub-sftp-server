@@ -23,5 +23,3 @@ jobs:
           git-release-bot-email: "release-bot@greenbird.com"
           maven-args: "-P release -Dmaven.javadoc.skip=true -DskipTests -DskipITs -Ddockerfile.skip -DdockerCompose.skip -Dmaven.deploy.skip=false"
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-          env:
-            JAVA_HOME: /usr/lib/jvm/java-11-openjdk/
