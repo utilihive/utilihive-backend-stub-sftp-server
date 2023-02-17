@@ -1,4 +1,5 @@
-include::release-version[]
+:source-highlighter: rouge
+:toc:
 
 == Utilihive SFTP Server Stub
 
@@ -21,12 +22,12 @@ although it was rewritten to Kotlin. It requires at least JDK 11.
 SFTP Server Stub is available from
 https://search.maven.org/#search|ga|1|utilihive-backend-stub-sftp[Maven Central].
 
-[source,xml,subs="attributes,specialchars"]
+[source,xml]
 ----
 <dependency>
   <groupId>com.greenbird.utilihive.stubs</groupId>
   <artifactId>utilihive-backend-stub-sftp-server</artifactId>
-  <version>{release-version}</version>
+  <version>LATEST_VERSION</version>
   <scope>test</scope>
 </dependency>
 ----
@@ -36,6 +37,7 @@ https://search.maven.org/#search|ga|1|utilihive-backend-stub-sftp[Maven Central]
 SFTP Server Stub is used by wrapping your test code with the function
 `withSftpServer`.
 
+[source,kotlin]
 ----
 import com.greenbird.utilihive.stubs.sftp.SftpServerTestContext.Companion.withSftpServer
 
@@ -57,10 +59,11 @@ By default, the SFTP server listens on an auto-allocated port. During the test
 this port can be read through field `port`. If you need to specify port, you can
 pass a parameter to the builder
 
+[source,kotlin]
 ----
 withSftpServer(port = 1234) {
   println(port) // 1234
-  ...
+  //...
 }
 ----
 
@@ -68,11 +71,12 @@ You can interact with the SFTP server by using the SFTP protocol with password
 authentication. By default, the server accepts every pair of username and
 password, but you can restrict it to specific pairs.
 
+[source,kotlin]
 ----
 withSftpServer {
   addUser("username", "password")
   addUser("username2", "password2")
-  ...
+  //...
 }
 ----
 
@@ -82,6 +86,7 @@ If you need an empty directory then you can use the function
 `createDirectory(String)` or create multiple directories at once with
 `createDirectories(String...)`.
 
+[source,kotlin]
 ----
 withSftpServer {
   createDirectory("/a/directory")
@@ -98,6 +103,7 @@ withSftpServer {
 If you test code that reads files from an SFTP server then you need a server
 that provides these files.
 
+[source,kotlin]
 ----
 @Test
 fun testReadingFiles() =
@@ -118,6 +124,7 @@ fun testReadingFiles() =
 If you test code that writes files to an SFTP server, and then you need to verify
 the upload, use `getFileText` or `getFileBytes`
 
+[source,kotlin]
 ----
 @Test
 fun testFiles() =
@@ -131,9 +138,10 @@ fun testFiles() =
 
 === Testing existence of files and directories, listing
 
-If you want to check whether a file was created or deleted then you can verify
-that it exists or not.
+If you want to check whether a file was created or deleted then use get Path and
+verify whether it exists or not.
 
+[source,kotlin]
 ----
 @Test
 fun testFile() 
@@ -153,6 +161,7 @@ If you want to reuse the SFTP server then you can delete all files and
 directories on the SFTP (This is rarely necessary because the function
 `withSftpServer` takes care that it starts and ends with a clean SFTP )
 
+[source,kotlin]
 ----
 withSftpServer {
   // creating files
@@ -177,6 +186,7 @@ Please note that your flow's readFiles processor needs `pollingFrequencySeconds`
 lower than `DEFAULT_TIMEOUT` used in the example otherwise the first file won't
 be read before the test times out.
 
+[source,kotlin]
 ----
 // helper extension function to verify source SFTP has moved file from 
 // 'source' folder over to the 'moveTo' folder
@@ -189,7 +199,7 @@ private fun SftpServerTestContext.assertSourceFileProcessingSucceeded(
     await().atMost(DEFAULT_TIMEOUT).until {
         with(this) {
             existsFile(moveToFilePath) &&
-                    getFileContent(moveToFilePath, UTF_8).contentEquals(sourceFileContent)
+                    getFileText(moveToFilePath, UTF_8).contentEquals(sourceFileContent)
         }
     }
     await().atMost(DEFAULT_TIMEOUT).until { !existsFile(sourceFilePath) }
@@ -200,8 +210,8 @@ fun `WHEN putting file on sftp THEN file is read and moved to a correct director
     ctx: ConcurrentTestContext
 ) = withSftpServer {
     ctx.addFlowTestConfig {
-        resource(...)
-        authConfig(...)
+        resource(/*...*/)
+        authConfig(/*...*/)
         flow(mySftpSourceFlow)
     }
 
