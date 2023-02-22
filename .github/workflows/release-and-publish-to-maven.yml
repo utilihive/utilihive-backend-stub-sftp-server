@@ -16,26 +16,41 @@ jobs:
         uses: qcastel/github-actions-maven-cmd@master
         with:
           maven-args: "clean install"
-      - name: Release and deploy to Maven Central
-        uses: mg-smartrent/github-actions-maven-release@master
+      - name: Set up Repository
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: GPG_PASSPHRASE
+      - name: Release prepare
+        uses: qcastel/github-actions-maven-release@master
         with:
           release-branch-name: "main"
           git-release-bot-name: "release-bot"
           git-release-bot-email: "release-bot@greenbird.com"
+          maven-args: "-P release -Dmaven.javadoc.skip=true -DskipTests -Ddockerfile.skip -DdockerCompose.skip -Dmaven.deploy.skip=true"
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-          gpg-enabled: "true"
-          gpg-key-id: ${{ secrets.GPG_KEY_ID }}
-          gpg-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
-
-          # Release
-          maven-repo-server-id: ossrh
-          maven-repo-server-username: ${{ secrets.OSSRH_USERNAME }}
-          maven-repo-server-password: ${{ secrets.OSSRH_PASSWORD }}
-          maven-release-args: "-P release -Dskip.unit.tests=true -Dskip.integration.tests=true"
-
-          # Publish artifacts to Maven central
-          maven-publish-args: "-P release -Dskip.unit.tests=true -Dskip.integration.tests=true"
-          maven-release-publish: "true"
-          maven-snapshot-publish: "false"
+      - name: Deploy to Sonatype
+        uses: qcastel/github-actions-maven-cmd@master
+        with:
+          maven-args: "-P release -DskipTests --batch-mode deploy"
+      - name: Get version
+        run: |
+          export version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+      - name: Create Release on GitHub
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        with:
+          tag_name: ${{ version }}
+          release_name: Utilihive SFTP Backend Stub ${{ version }}
+          draft: true
+          prerelease: false
