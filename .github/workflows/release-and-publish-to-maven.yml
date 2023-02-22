@@ -36,21 +36,14 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Deploy to Sonatype
         uses: qcastel/github-actions-maven-cmd@master
-        with:
-          maven-args: "-P release -DskipTests --batch-mode deploy"
-      - name: Get version
-        run: |
-          export version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-      - name: Create Release on GitHub
-        id: create_release
-        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         with:
-          tag_name: ${{ version }}
-          release_name: Utilihive SFTP Backend Stub ${{ version }}
-          draft: true
-          prerelease: false
+          maven-args: "-P release -DskipTests --batch-mode deploy"
+      - name: Create release with changelog
+        uses: konfer-be/action-create-release-from-tag@v1.0.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
