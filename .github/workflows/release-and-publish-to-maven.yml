@@ -40,7 +40,10 @@ jobs:
           maven-args: "-P release -Dmaven.javadoc.skip=true -DskipTests -Ddockerfile.skip -DdockerCompose.skip -Dmaven.deploy.skip=true"
           access-token: ${{ secrets.GITHUB_ACCESS_TOKEN }}
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-          gpg-enabled: "false" # we will use our maven profile instead
+          gpg-enabled: "true"
+          gpg-key-id: ${{ secrets.GPG_KEY_ID }}
+          gpg-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
       - name: Deploy to Sonatype
         uses: qcastel/github-actions-maven-cmd@master
         env:
