@@ -37,7 +37,6 @@ jobs:
 
           maven-args: "-P release -Dmaven.javadoc.skip=true -DskipTests -Ddockerfile.skip -DdockerCompose.skip"
 
-          access-token: ${{ secrets.GITHUB_ACCESS_TOKEN }}
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
           gpg-enabled: "true"
