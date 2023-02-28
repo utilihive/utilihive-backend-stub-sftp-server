@@ -13,14 +13,14 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install Java and Maven
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3
         with:
           java-version: 11
 
       - name: Increment Version
         run: |
-          ./mvnw build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion} versions:commit
-          export version=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+          mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion} versions:commit
+          export version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           git config user.name release-bot
           git config user.email release-bot@greenbird.com
           git add .
@@ -39,8 +39,8 @@ jobs:
 
       - name: Increment to next development version
         run: |
-          ./mvnw build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT versions:commit
-          export version=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+          mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT versions:commit
+          export version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           git config user.name release-bot
           git config user.email release-bot@greenbird.com
           git add .
