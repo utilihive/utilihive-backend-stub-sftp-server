@@ -8,38 +8,41 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, '[ci skip]')"
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Repository
-        uses: actions/setup-java@v3
+      - name: Install Java and Maven
+        uses: actions/setup-java@v1
         with:
-          java-version: '11'
-          distribution: 'adopt'
-          server-id: ossrh
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: GPG_PASSPHRASE
+          java-version: 11
 
-      - name: Release prepare
-        uses: qcastel/github-actions-maven-release@master
-        env:
-          JAVA_HOME: /usr/lib/jvm/java-11-openjdk/
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Increment Version
+        run: |
+          ./mvnw build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion} versions:commit
+          export version=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+          git config user.name release-bot
+          git config user.email release-bot@greenbird.com
+          git add .
+          git commit -m "Release $version"
+          git push
+          git tag -a $version -m "$version"
+          git push origin $version
+
+      - name: Release to Nexus Repository
+        uses: samuelmeuli/action-maven-publish@v1
         with:
-          release-branch-name: "main"
+          gpg_private_key: ${{ secrets.GPG_SIGNING_KEY }}
+          gpg_passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          nexus_username: ${{ secrets.OSSRH_USERNAME }}
+          nexus_password: ${{ secrets.OSSRH_PASSWORD }}
 
-          git-release-bot-name: "release-bot"
-          git-release-bot-email: "release-bot@greenbird.com"
-
-          maven-args: "-P release -Dmaven.javadoc.skip=true -DskipTests -Ddockerfile.skip -DdockerCompose.skip"
-
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-          gpg-enabled: "true"
-          gpg-key-id: ${{ secrets.GPG_KEY_ID }}
-          gpg-key: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }}
-          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Increment to next development version
+        run: |
+          ./mvnw build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT versions:commit
+          export version=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+          git config user.name release-bot
+          git config user.email release-bot@greenbird.com
+          git add .
+          git commit -m "prepare for next development iteration"
+          git push
