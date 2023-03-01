@@ -5,7 +5,7 @@
 
     <groupId>com.greenbird.utilihive.stubs</groupId>
     <artifactId>utilihive-backend-stub-sftp</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.5-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Utilihive SFTP Backend Stub</name>
@@ -24,8 +24,14 @@
         <connection>scm:git:${project.scm.url}</connection>
         <developerConnection>scm:git:${project.scm.url}</developerConnection>
         <url>git@github.com:utilihive/utilihive-backend-stub-sftp-server.git</url>
-        <tag>HEAD</tag>
     </scm>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
 
     <properties>
         <annotations.version>23.1.0</annotations.version>
