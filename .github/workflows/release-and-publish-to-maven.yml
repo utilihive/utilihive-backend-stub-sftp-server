@@ -30,6 +30,11 @@ jobs:
           git tag -a $version -m "$version"
           git push origin $version
 
+      - name: Create Github release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "*.tar.gz,*.zip,*.jar"
+
       - name: Release to Nexus Repository
         uses: samuelmeuli/action-maven-publish@v1
         with:
