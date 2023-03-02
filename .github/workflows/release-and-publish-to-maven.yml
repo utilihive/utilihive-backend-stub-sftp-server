@@ -27,9 +27,9 @@ jobs:
           git config user.email release-bot@greenbird.com
           git add .
           git commit -m "Release $version"
-          git push --force
+          git push
           git tag -a $version -m "$version"
-          git push origin $version --force
+          git push origin $version
           echo "::set-output name=versionTag::$version"
           mvn -P release clean package
 
