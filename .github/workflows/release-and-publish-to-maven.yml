@@ -27,16 +27,16 @@ jobs:
           git config user.email release-bot@greenbird.com
           git add .
           git commit -m "Release $version"
-          git push
+          git push --force
           git tag -a $version -m "$version"
-          git push origin $version
+          git push origin $version --force
           echo "::set-output name=versionTag::$version"
           mvn -P release clean package
 
       - name: Create Github release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "*.tar.gz,*.zip,target/*.jar"
+          artifacts: "target/*.jar"
           tag: ${{steps.increment_version.outputs.versionTag}}
 
       - name: Release to Nexus Repository
