@@ -34,14 +34,14 @@ jobs:
           git push
           git tag -a $version -m "$version"
           git push origin $version
-          echo "::set-output name=versionTag::$version"
+          echo "versionTag=$version" >> $GITHUB_ENV
           mvn -P release clean package
 
       - name: Create Github release
         uses: ncipollo/release-action@v1
         with:
           artifacts: "target/*.jar"
-          tag: ${{steps.increment_version.outputs.versionTag}}
+          tag: ${{ env.versionTag }}
           bodyFile: CHANGELOG.md
 
       - name: Release to Nexus Repository
