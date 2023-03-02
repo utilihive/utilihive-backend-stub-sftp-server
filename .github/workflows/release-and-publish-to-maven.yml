@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[ci skip]')"
 
     steps:
       - name: Git Checkout
@@ -29,7 +30,7 @@ jobs:
           git config user.name Greenbird CI
           git config user.email greenbird-ci@greenbird.com
           git add .
-          git commit -m "Release $version"
+          git commit -m "[ci skip] Release $version"
           git push
           git tag -a $version -m "$version"
           git push origin $version
@@ -59,5 +60,5 @@ jobs:
           git config user.name Greenbird CI
           git config user.email greenbird-ci@greenbird.com
           git add .
-          git commit -m "prepare for next development iteration"
+          git commit -m "[ci skip] prepare for next development iteration"
           git push
