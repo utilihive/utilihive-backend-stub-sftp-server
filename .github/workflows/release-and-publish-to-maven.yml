@@ -10,7 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Git Checkout
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.BOT_TOKEN }}
 
       - name: Install Java and Maven
         uses: actions/setup-java@v3
@@ -20,8 +23,6 @@ jobs:
 
       - name: Increment Version
         id: increment_version
-        env:
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion} versions:commit
           export version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
@@ -52,8 +53,6 @@ jobs:
           maven_profiles: release
 
       - name: Increment to next development version
-        env:
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT versions:commit
           export version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
