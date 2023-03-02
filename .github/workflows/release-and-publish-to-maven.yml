@@ -20,11 +20,13 @@ jobs:
 
       - name: Increment Version
         id: increment_version
+        env:
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion} versions:commit
           export version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          git config user.name release-bot
-          git config user.email release-bot@greenbird.com
+          git config user.name Greenbird CI
+          git config user.email greenbird-ci@greenbird.com
           git add .
           git commit -m "Release $version"
           git push
@@ -38,6 +40,7 @@ jobs:
         with:
           artifacts: "target/*.jar"
           tag: ${{steps.increment_version.outputs.versionTag}}
+          bodyFile: CHANGELOG.md
 
       - name: Release to Nexus Repository
         uses: samuelmeuli/action-maven-publish@v1
@@ -49,11 +52,13 @@ jobs:
           maven_profiles: release
 
       - name: Increment to next development version
+        env:
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT versions:commit
           export version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          git config user.name release-bot
-          git config user.email release-bot@greenbird.com
+          git config user.name Greenbird CI
+          git config user.email greenbird-ci@greenbird.com
           git add .
           git commit -m "prepare for next development iteration"
           git push
