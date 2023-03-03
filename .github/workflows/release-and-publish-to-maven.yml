@@ -44,7 +44,7 @@ jobs:
           git tag -a $version -m "$version"
           git push origin $version
           echo "versionTag=$version" >> $GITHUB_ENV
-          mvn -P release clean verify
+          mvn -P release clean deploy
 
       - name: Create Github release
         uses: ncipollo/release-action@v1
