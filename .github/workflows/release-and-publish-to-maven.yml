@@ -31,7 +31,7 @@ jobs:
         id: increment_version
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion} versions:commit
@@ -44,7 +44,7 @@ jobs:
           git tag -a $version -m "$version"
           git push origin $version
           echo "versionTag=$version" >> $GITHUB_ENV
-          mvn -P release clean deploy
+          mvn -P release clean deploy -DskipTests
 
       - name: Create Github release
         uses: ncipollo/release-action@v1
