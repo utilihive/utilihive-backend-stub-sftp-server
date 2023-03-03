@@ -5,7 +5,7 @@
 
     <groupId>com.greenbird.utilihive.stubs</groupId>
     <artifactId>utilihive-backend-stub-sftp</artifactId>
-    <version>1.0.15-SNAPSHOT</version>
+    <version>1.0.15</version>
     <packaging>jar</packaging>
 
     <name>Utilihive SFTP Backend Stub</name>
