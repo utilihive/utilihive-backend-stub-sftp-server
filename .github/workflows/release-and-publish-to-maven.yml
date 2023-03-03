@@ -21,9 +21,18 @@ jobs:
         with:
           java-version: 11
           distribution: 'adopt'
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: GPG_PASSPHRASE
 
-      - name: Increment Version
+      - name: Stabilize version and release to Sonatype
         id: increment_version
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion} versions:commit
           export version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
@@ -35,7 +44,7 @@ jobs:
           git tag -a $version -m "$version"
           git push origin $version
           echo "versionTag=$version" >> $GITHUB_ENV
-          mvn -P release clean package
+          mvn -P release clean verify
 
       - name: Create Github release
         uses: ncipollo/release-action@v1
@@ -43,15 +52,6 @@ jobs:
           artifacts: "target/*.jar"
           tag: ${{ env.versionTag }}
           bodyFile: CHANGELOG.md
-
-      - name: Release to Nexus Repository
-        uses: samuelmeuli/action-maven-publish@v1
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg_passphrase: ${{ secrets.GPG_PASSPHRASE }}
-          nexus_username: ${{ secrets.OSSRH_USERNAME }}
-          nexus_password: ${{ secrets.OSSRH_PASSWORD }}
-          maven_profiles: release
 
       - name: Increment to next development version
         run: |
