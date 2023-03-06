@@ -8,13 +8,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # prevents the workflow from running when the commit message is made by this release process (it would loop)
     if: "!contains(github.event.head_commit.message, '[ci skip]')"
 
     steps:
       - name: Git Checkout
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.BOT_TOKEN }}
+          token: ${{ secrets.BOT_TOKEN }} # CI user personal authentication token (PAT)
 
       - name: Install Java and Maven
         uses: actions/setup-java@v3
@@ -46,7 +47,7 @@ jobs:
           echo "versionTag=$version" >> $GITHUB_ENV
           mvn -P release clean deploy -DskipTests
 
-      - name: Create Github release
+      - name: Create GitHub release
         uses: ncipollo/release-action@v1
         with:
           artifacts: "target/*.jar"

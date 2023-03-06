@@ -239,11 +239,13 @@ fun `WHEN putting file on sftp THEN file is read and moved to a correct director
 
 == Contributing
 
-If you have a feature request, found a bug or
-simply have a question about SFTP Server Stub.
+If you have a feature request, found a bug or simply have a question about SFTP Server Stub.
 
 * https://github.com/utilihive/utilihive-backend-stub-sftp-server/issues[Create an issue]
  describing the bug and/or use case.
 * If you have a bug fix, you can create a pull request.
  (See https://guides.github.com/introduction/flow/index.html[Understanding the GitHub Flow])
  In such a case scenario must be covered by a unit test.
+
+== Building and releasing
+To release your code, create a pull request from your branch to `main`. Once someone approves it and merges to `main`, the GitHub workflow takes care of creating new version, tagging, signing and publishing to Maven Central repository, and creating a new GitHub release (uses `CHANGELOG.md` as description).
