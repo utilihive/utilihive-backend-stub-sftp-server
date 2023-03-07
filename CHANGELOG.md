@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 1.1.2
+- Updated documentation to mention absolute vs. relative paths use
+
 ## Version 1.1.1
 - enabled autoReleaseAfterClose to automate project releasing from staging to public Maven central repository
 

@@ -89,10 +89,10 @@ If you need an empty directory then you can use the function
 [source,kotlin]
 ----
 withSftpServer {
-  createDirectory("/a/directory")
+  createDirectory("a/directory")
   createDirectories(
-    "/another/directory",
-     "/yet/another/directory"
+    "another/directory",
+    "yet/another/directory"
   )
   //code that reads from or writes to those directories
 }
@@ -109,11 +109,11 @@ that provides these files.
 fun testReadingFiles() =
   withSftpServer {
     // add text file
-    putFile("/directory/file.txt", "content of file")
+    putFile("directory/file.txt", "content of file")
 
     // add binary file from input stream
     val inputStream = getClass().getResourceAsStream("data.bin")
-    putFile("/directory/fileFromInputStream.bin", inputStream)
+    putFile("directory/fileFromInputStream.bin", inputStream)
 
     //code that reads the file using the SFTP protocol
   }
@@ -130,8 +130,8 @@ the upload, use `getFileText` or `getFileBytes`
 fun testFiles() =
   withSftpServer {
     //code that uploads files using the SFTP protocol
-    val textFileContent = getFileText("/directory/file.txt")
-    val binaryFileContent = getFileBytes("/directory/file.bin")
+    val textFileContent = getFileText("directory/file.txt")
+    val binaryFileContent = getFileBytes("directory/file.bin")
     //verify files content
   }
 ----
@@ -147,7 +147,7 @@ verify whether it exists or not.
 fun testFile() 
   withSftpServer {
     //code that uploads or deletes the files
-    val path = getPath("/directory/file.txt")
+    val path = getPath("directory/file.txt")
     // now you can test on the path
     path.exists
     path.isDirectory
@@ -237,6 +237,12 @@ fun `WHEN putting file on sftp THEN file is read and moved to a correct director
 }
 ----
 
+=== Absolute vs relative paths
+The SFTP Server Stub supports both absolute and relative paths (relative are interpreted as relative to user's
+home directory). However, in connection to flow testing you want to avoid using absolute paths, as the `readFiles`
+and `writeFiles` processors in Utilihive Flow Server interpret all paths as relative to user's home directory,
+whether they are prepended with `/` or not.
+
 == Contributing
 
 If you have a feature request, found a bug or simply have a question about SFTP Server Stub.
@@ -248,4 +254,6 @@ If you have a feature request, found a bug or simply have a question about SFTP 
  In such a case scenario must be covered by a unit test.
 
 == Building and releasing
-To release your code, create a pull request from your branch to `main`. Once someone approves it and merges to `main`, the GitHub workflow takes care of creating new version, tagging, signing and publishing to Maven Central repository, and creating a new GitHub release (uses `CHANGELOG.md` as description).
+To release your code, create a pull request from your branch to `main`. Once someone approves it and merges to `main`,
+the GitHub workflow takes care of creating new version, tagging, signing and publishing to Maven Central repository,
+and creating a new GitHub release (uses `CHANGELOG.md` as description).
