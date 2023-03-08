@@ -284,6 +284,64 @@ class SftpServerTestContextTest {
             )
     }
 
+    // Absolute vs relative path tests
+
+    @Test
+    fun `GIVEN default dir root WHEN a text file is put to a directory using absolute path THEN object has correct path`() =
+        withSftpServer {
+            putFile(
+                "/some/dir/dummy_file.txt",
+                "dummy content",
+            )
+            val file = downloadFile("/some/dir/dummy_file.txt")
+            assertThat(file.toString(UTF_8))
+                .isEqualTo("dummy content")
+        }
+
+    @Test
+    fun `GIVEN default dir root WHEN a text file is put to a directory using relative path THEN object has correct path`() =
+        withSftpServer {
+            putFile(
+                "some/dir/dummy_file.txt",
+                "dummy content",
+            )
+            val file = downloadFile("/some/dir/dummy_file.txt")
+            assertThat(file.toString(UTF_8))
+                .isEqualTo("dummy content")
+        }
+
+    @Test
+    fun `WHEN trying to set relative dir as sftp default dir THEN exception thrown`() {
+        assertThatThrownBy {
+            withSftpServer(defaultDirectory = "some") {}
+        }.isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessage("Default directory must be absolute path.")
+    }
+
+    @Test
+    fun `GIVEN changed default dir WHEN a text file is put to a directory using absolute path THEN object has correct path`() =
+        withSftpServer(defaultDirectory = "/some") {
+            putFile(
+                "/some/dir/dummy_file.txt",
+                "dummy content",
+            )
+            val file = downloadFile("/some/dir/dummy_file.txt")
+            assertThat(file.toString(UTF_8))
+                .isEqualTo("dummy content")
+        }
+
+    @Test
+    fun `GIVEN changed default dir WHEN a text file is put to a directory using relative path THEN object has correct path`() =
+        withSftpServer(defaultDirectory = "/some") {
+            putFile(
+                "dir/dummy_file.txt",
+                "dummy content",
+            )
+            val file = downloadFile("/some/dir/dummy_file.txt")
+            assertThat(file.toString(UTF_8))
+                .isEqualTo("dummy content")
+        }
+
     // Directory creation tests
 
     @Test
