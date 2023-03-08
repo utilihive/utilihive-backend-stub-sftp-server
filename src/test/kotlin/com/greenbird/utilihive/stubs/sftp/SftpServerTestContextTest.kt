@@ -287,7 +287,7 @@ class SftpServerTestContextTest {
     // Absolute vs relative path tests
 
     @Test
-    fun `GIVEN default dir root WHEN a text file is put to a directory using absolute path THEN object has correct path`() =
+    fun `GIVEN default dir root WHEN text file is put to a dir using absolute path THEN object has correct path`() =
         withSftpServer {
             putFile(
                 "/some/dir/dummy_file.txt",
@@ -299,7 +299,7 @@ class SftpServerTestContextTest {
         }
 
     @Test
-    fun `GIVEN default dir root WHEN a text file is put to a directory using relative path THEN object has correct path`() =
+    fun `GIVEN default dir root WHEN text file is put to a dir using relative path THEN object has correct path`() =
         withSftpServer {
             putFile(
                 "some/dir/dummy_file.txt",
@@ -319,7 +319,7 @@ class SftpServerTestContextTest {
     }
 
     @Test
-    fun `GIVEN changed default dir WHEN a text file is put to a directory using absolute path THEN object has correct path`() =
+    fun `GIVEN changed default dir WHEN text file is put to a dir using absolute path THEN object has correct path`() =
         withSftpServer(defaultDirectory = "/some") {
             putFile(
                 "/some/dir/dummy_file.txt",
@@ -331,7 +331,7 @@ class SftpServerTestContextTest {
         }
 
     @Test
-    fun `GIVEN changed default dir WHEN a text file is put to a directory using relative path THEN object has correct path`() =
+    fun `GIVEN changed default dir WHEN text file is put to a dir using relative path THEN object has correct path`() =
         withSftpServer(defaultDirectory = "/some") {
             putFile(
                 "dir/dummy_file.txt",
