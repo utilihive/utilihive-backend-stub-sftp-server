@@ -59,15 +59,15 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
         /**
          * Provides a context with in-memory SFTP server stub.
          * @param port the port of the SFTP server. If set to 0 (default) then a random available port is used.
-         * @param defaultDirectory Creates a directory and uses it as a default working directory against which
+         * @param initialDirectory Creates a directory and uses it as a default working directory against which
          *                         all relative paths are evaluated.
          */
-        fun withSftpServer(port: Int = 0, defaultDirectory: String = "/", block: SftpServerTestContext.() -> Unit) {
+        fun withSftpServer(port: Int = 0, initialDirectory: String = "/", block: SftpServerTestContext.() -> Unit) {
             @Suppress("MagicNumber")
             require(port in 0..65535) {
                 ("Port cannot be set to $port because only ports between 0 and 65535 are valid.")
             }
-            val server = SftpServerTestContext(createFileSystem(defaultDirectory))
+            val server = SftpServerTestContext(createFileSystem(initialDirectory))
             server.start(port)
             server.use(block)
         }
@@ -75,15 +75,15 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
         private val SEQUENCE = AtomicInteger()
 
         /** Returns a Linux-like filesystem. */
-        private fun createFileSystem(defaultDirectory: String): FileSystem {
-            require (defaultDirectory.startsWith("/")) {
-                "Default directory must be absolute path."
+        private fun createFileSystem(initialDirectory: String): FileSystem {
+            require (initialDirectory.startsWith("/")) {
+                "Initial directory must be absolute path."
             }
             return MemoryFileSystemBuilder.newEmpty()
                 .addRoot("/")
                 .setSeparator("/")
                 .addFileAttributeView(PosixFileAttributeView::class.java)
-                .setCurrentWorkingDirectory(defaultDirectory)
+                .setCurrentWorkingDirectory(initialDirectory)
                 .setStoreTransformer(StringTransformers.IDENTIY)
                 .setCaseSensitive(true)
                 .setSupportFileChannelOnDirectory(true)

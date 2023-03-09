@@ -287,7 +287,7 @@ class SftpServerTestContextTest {
     // Absolute vs relative path tests
 
     @Test
-    fun `GIVEN default dir root WHEN text file is put to a dir using absolute path THEN object has correct path`() =
+    fun `GIVEN initial dir root WHEN text file is put to a dir using absolute path THEN object has correct path`() =
         withSftpServer {
             putFile(
                 "/some/dir/dummy_file.txt",
@@ -299,47 +299,44 @@ class SftpServerTestContextTest {
         }
 
     @Test
-    fun `GIVEN default dir root WHEN text file is put to a dir using relative path THEN object has correct path`() =
+    fun `GIVEN initial dir root WHEN text file is put to a dir using relative path THEN object has correct path`() =
         withSftpServer {
             putFile(
                 "some/dir/dummy_file.txt",
                 "dummy content",
             )
-            val file = downloadFile("/some/dir/dummy_file.txt")
-            assertThat(file.toString(UTF_8))
-                .isEqualTo("dummy content")
+            val file = getFileText("/some/dir/dummy_file.txt")
+            assertThat(file).isEqualTo("dummy content")
         }
 
     @Test
-    fun `WHEN trying to set relative dir as sftp default dir THEN exception thrown`() {
+    fun `WHEN trying to set relative dir as sftp initial dir THEN exception thrown`() {
         assertThatThrownBy {
-            withSftpServer(defaultDirectory = "some") {}
+            withSftpServer(initialDirectory = "some") {}
         }.isInstanceOf(IllegalArgumentException::class.java)
-            .hasMessage("Default directory must be absolute path.")
+            .hasMessage("Initial directory must be absolute path.")
     }
 
     @Test
-    fun `GIVEN changed default dir WHEN text file is put to a dir using absolute path THEN object has correct path`() =
-        withSftpServer(defaultDirectory = "/some") {
+    fun `GIVEN changed initial dir WHEN text file is put to a dir using absolute path THEN object has correct path`() =
+        withSftpServer(initialDirectory = "/some") {
             putFile(
                 "/some/dir/dummy_file.txt",
                 "dummy content",
             )
-            val file = downloadFile("/some/dir/dummy_file.txt")
-            assertThat(file.toString(UTF_8))
-                .isEqualTo("dummy content")
+            val file = getFileText("/some/dir/dummy_file.txt")
+            assertThat(file).isEqualTo("dummy content")
         }
 
     @Test
-    fun `GIVEN changed default dir WHEN text file is put to a dir using relative path THEN object has correct path`() =
-        withSftpServer(defaultDirectory = "/some") {
+    fun `GIVEN changed initial dir WHEN text file is put to a dir using relative path THEN object has correct path`() =
+        withSftpServer(initialDirectory = "/some") {
             putFile(
                 "dir/dummy_file.txt",
                 "dummy content",
             )
-            val file = downloadFile("/some/dir/dummy_file.txt")
-            assertThat(file.toString(UTF_8))
-                .isEqualTo("dummy content")
+            val file = getFileText("/some/dir/dummy_file.txt")
+            assertThat(file).isEqualTo("dummy content")
         }
 
     // Directory creation tests
