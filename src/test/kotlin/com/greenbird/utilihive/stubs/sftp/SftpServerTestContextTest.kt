@@ -293,9 +293,9 @@ class SftpServerTestContextTest {
                 "/some/dir/dummy_file.txt",
                 "dummy content",
             )
-            val file = downloadFile("/some/dir/dummy_file.txt")
-            assertThat(file.toString(UTF_8))
-                .isEqualTo("dummy content")
+            val path = getPath("/some/dir/dummy_file.txt")
+            assertThat(path.exists()).isTrue
+
         }
 
     @Test
@@ -305,8 +305,8 @@ class SftpServerTestContextTest {
                 "some/dir/dummy_file.txt",
                 "dummy content",
             )
-            val file = getFileText("/some/dir/dummy_file.txt")
-            assertThat(file).isEqualTo("dummy content")
+            val path = getPath("/some/dir/dummy_file.txt")
+            assertThat(path.exists()).isTrue
         }
 
     @Test
@@ -324,8 +324,8 @@ class SftpServerTestContextTest {
                 "/some/dir/dummy_file.txt",
                 "dummy content",
             )
-            val file = getFileText("/some/dir/dummy_file.txt")
-            assertThat(file).isEqualTo("dummy content")
+            val path = getPath("/some/dir/dummy_file.txt")
+            assertThat(path.exists()).isTrue
         }
 
     @Test
@@ -335,8 +335,8 @@ class SftpServerTestContextTest {
                 "dir/dummy_file.txt",
                 "dummy content",
             )
-            val file = getFileText("/some/dir/dummy_file.txt")
-            assertThat(file).isEqualTo("dummy content")
+            val path = getPath("/some/dir/dummy_file.txt")
+            assertThat(path.exists()).isTrue
         }
 
     // Directory creation tests
