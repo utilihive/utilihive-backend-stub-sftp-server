@@ -238,10 +238,20 @@ fun `WHEN putting file on sftp THEN file is read and moved to a correct director
 ----
 
 === Absolute vs relative paths
-The SFTP Server Stub supports both absolute and relative paths (relative are interpreted as relative to user's
-home directory). However, in connection to flow testing you want to avoid using absolute paths, as the `readFiles`
-and `writeFiles` processors in Utilihive Flow Server interpret all paths as relative to user's home directory,
-whether they are prepended with `/` or not.
+
+The SFTP Server Stub supports both absolute (`/path/to/file`) and relative (`path/to/file`) paths.
+Quite commonly SFTP servers present client with a limited view of the filesystem, where root of what's available to the user is presented as `/` and that is the initial directory where user starts after login.
+In such a case, absolute and relative paths will behave effectively the same and point to the same place in the filesystem.
+
+If that's not your case and your server presents you with let's say `/home/myuser` after logging in, then you should set the path when initializing the context.
+----
+withSftpServer(initialDirectory = "/home/myuser") {
+  // ...
+}
+----
+Paths without `/` prefix will be interpreted relative to given `initialDirectory`, so in the example above, `/files/in` will point to `/files/in` and `files/in` point to `/home/myuser/files/in`.
+In connection to flow testing you should keep in mind that the `readFiles` and
+`writeFiles` processors in Utilihive Flow Server always interpret property `path` as relative to that directory.
 
 == Contributing
 

@@ -284,6 +284,61 @@ class SftpServerTestContextTest {
             )
     }
 
+    // Absolute vs relative path tests
+
+    @Test
+    fun `GIVEN initial dir root WHEN text file is put to a dir using absolute path THEN object has correct path`() =
+        withSftpServer {
+            putFile(
+                "/some/dir/dummy_file.txt",
+                "dummy content",
+            )
+            val path = getPath("/some/dir/dummy_file.txt")
+            assertThat(path.exists()).isTrue
+
+        }
+
+    @Test
+    fun `GIVEN initial dir root WHEN text file is put to a dir using relative path THEN object has correct path`() =
+        withSftpServer {
+            putFile(
+                "some/dir/dummy_file.txt",
+                "dummy content",
+            )
+            val path = getPath("/some/dir/dummy_file.txt")
+            assertThat(path.exists()).isTrue
+        }
+
+    @Test
+    fun `WHEN trying to set relative dir as sftp initial dir THEN exception thrown`() {
+        assertThatThrownBy {
+            withSftpServer(initialDirectory = "some") {}
+        }.isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessage("Initial directory must be absolute path.")
+    }
+
+    @Test
+    fun `GIVEN changed initial dir WHEN text file is put to a dir using absolute path THEN object has correct path`() =
+        withSftpServer(initialDirectory = "/some") {
+            putFile(
+                "/some/dir/dummy_file.txt",
+                "dummy content",
+            )
+            val path = getPath("/some/dir/dummy_file.txt")
+            assertThat(path.exists()).isTrue
+        }
+
+    @Test
+    fun `GIVEN changed initial dir WHEN text file is put to a dir using relative path THEN object has correct path`() =
+        withSftpServer(initialDirectory = "/some") {
+            putFile(
+                "dir/dummy_file.txt",
+                "dummy content",
+            )
+            val path = getPath("/some/dir/dummy_file.txt")
+            assertThat(path.exists()).isTrue
+        }
+
     // Directory creation tests
 
     @Test

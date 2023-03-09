@@ -1,6 +1,7 @@
 package com.greenbird.utilihive.stubs.sftp
 
 import com.github.marschall.memoryfilesystem.MemoryFileSystemBuilder
+import com.github.marschall.memoryfilesystem.StringTransformers
 import org.apache.sshd.common.file.FileSystemFactory
 import org.apache.sshd.common.session.SessionContext
 import org.apache.sshd.server.SshServer
@@ -22,6 +23,7 @@ import java.nio.file.PathMatcher
 import java.nio.file.SimpleFileVisitor
 import java.nio.file.WatchService
 import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file.attribute.PosixFileAttributeView
 import java.nio.file.attribute.UserPrincipalLookupService
 import java.nio.file.spi.FileSystemProvider
 import java.util.*
@@ -54,23 +56,39 @@ private constructor(private val fileSystem: FileSystem) : Closeable {
         }
 
     companion object {
-        fun withSftpServer(port: Int = 0, block: SftpServerTestContext.() -> Unit) {
+        /**
+         * Provides a context with in-memory SFTP server stub.
+         * @param port the port of the SFTP server. If set to 0 (default) then a random available port is used.
+         * @param initialDirectory Creates a directory and uses it as a default working directory against which
+         *                         all relative paths are evaluated.
+         */
+        fun withSftpServer(port: Int = 0, initialDirectory: String = "/", block: SftpServerTestContext.() -> Unit) {
             @Suppress("MagicNumber")
             require(port in 0..65535) {
                 ("Port cannot be set to $port because only ports between 0 and 65535 are valid.")
             }
-            val server = SftpServerTestContext(createFileSystem())
+            val server = SftpServerTestContext(createFileSystem(initialDirectory))
             server.start(port)
             server.use(block)
         }
 
         private val SEQUENCE = AtomicInteger()
 
-        private fun createFileSystem(): FileSystem {
-            return MemoryFileSystemBuilder.newLinux().build(
-                "SftpServerTestContext-"
-                        + SEQUENCE.incrementAndGet()
-            )
+        /** Returns a Linux-like filesystem. */
+        private fun createFileSystem(initialDirectory: String): FileSystem {
+            require (initialDirectory.startsWith("/")) {
+                "Initial directory must be absolute path."
+            }
+            return MemoryFileSystemBuilder.newEmpty()
+                .addRoot("/")
+                .setSeparator("/")
+                .addFileAttributeView(PosixFileAttributeView::class.java)
+                .setCurrentWorkingDirectory(initialDirectory)
+                .setStoreTransformer(StringTransformers.IDENTIY)
+                .setCaseSensitive(true)
+                .setSupportFileChannelOnDirectory(true)
+                .addForbiddenCharacter(0.toChar())
+                .build("SftpServerTestContext-" + SEQUENCE.incrementAndGet())
         }
     }
 

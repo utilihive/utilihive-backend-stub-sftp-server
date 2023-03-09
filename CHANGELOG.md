@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 1.2.0
+- Added option to configure initial directory
+
 ## Version 1.1.2
 - Updated documentation to mention absolute vs. relative paths use
 
