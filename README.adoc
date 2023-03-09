@@ -1,26 +1,26 @@
 :source-highlighter: rouge
 :toc:
 
-== Utilihive SFTP Server Stub
+= Utilihive SFTP Server Stub
 
 SFTP Server Stub is a Kotlin based project that runs an in-memory SFTP server while your tests are running.
 It uses the SFTP server of the
 http://mina.apache.org/sshd-project/index.html[Apache SSHD] project.
-It is made to simplify functional testing of https://docs.utilihive.io/utilihive-integration/core-concepts/flows[flows]
+It is made to simplify the functional testing of https://docs.utilihive.io/utilihive-integration/core-concepts/flows[integration flows]
 written for https://docs.utilihive.io/utilihive-integration/core-concepts/flow-server[Utilihive flow-server]
-by providing a mock/stub of a SFTP server and basic functions for manipulating files on it.
-However, it is not dependent on Utilihive platform and can be used independently.
+by providing a mock/stub of an SFTP server and basic functions for manipulating files on it.
+However, it is not dependent on the Utilihive platform and can be used independently.
 
 SFTP Server Stub is published under the
 https://www.apache.org/licenses/LICENSE-2.0["Apache license, version 2.0"] and is originally based on Stefan Birkner's
-https://github.com/stefanbirkner/fake-sftp-server-lambda[Fake SFTP Server Lambda],
-although it was rewritten to Kotlin. It requires at least JDK 11.
-
+https://github.com/stefanbirkner/fake-sftp-server-lambda[Fake SFTP Server Lambda] library, though rewritten in Kotlin.
+It requires at least JDK 11.
 
 == Installation
 
 SFTP Server Stub is available from
-https://search.maven.org/#search|ga|1|utilihive-backend-stub-sftp[Maven Central].
+https://central.sonatype.com/search?smo=true&q=utilihive-backend-stub-sftp[Maven Central].
+You only need to add the following dependency to your project's `pom.xml` file:
 
 [source,xml]
 ----
@@ -34,8 +34,8 @@ https://search.maven.org/#search|ga|1|utilihive-backend-stub-sftp[Maven Central]
 
 == Usage
 
-SFTP Server Stub is used by wrapping your test code with the function
-`withSftpServer`.
+SFTP Server Stub is used by wrapping your test code with the `withSftpServer` builder function.
+For example:
 
 [source,kotlin]
 ----
@@ -43,48 +43,49 @@ import com.greenbird.utilihive.stubs.sftp.SftpServerTestContext.Companion.withSf
 
 class TestClass {
   @Test
-  fun someTest() =
+  fun someTestCase() =
     withSftpServer {
-      //test code
+      // test code
+      ...
     }
 }
 ----
 
-`withSftpServer` starts an SFTP server before executing the test code and shuts
-down the server afterwards. The test code uses the provided server object to
-obtain information about the running server or use additional features of Fake
-SFTP Server Lambda.
+`withSftpServer` starts an SFTP server before executing the test code and shuts down the server afterwards.
+The test code uses the provided server object to obtain information about the running server or leverage additional features of SFTP Server Stub.
 
-By default, the SFTP server listens on an auto-allocated port. During the test
-this port can be read through field `port`. If you need to specify port, you can
-pass a parameter to the builder
+By default, the SFTP server listens on an auto-allocated port.
+During the test, this port can be read from the `port` property.
+If you need to specify a custom port, you can pass an argument to the builder in the following manner:
 
 [source,kotlin]
 ----
 withSftpServer(port = 1234) {
   println(port) // 1234
-  //...
+
+  ...
 }
 ----
 
-You can interact with the SFTP server by using the SFTP protocol with password
-authentication. By default, the server accepts every pair of username and
-password, but you can restrict it to specific pairs.
+You can interact with the SFTP server by using the SFTP protocol with password authentication.
+By default, the server accepts any username and password pair, but you can restrict it to specific pairs.
+For example:
 
 [source,kotlin]
 ----
 withSftpServer {
   addUser("username", "password")
   addUser("username2", "password2")
-  //...
+
+  ...
 }
 ----
 
-=== Creating directories
+=== Creating Directories
 
-If you need an empty directory then you can use the function
-`createDirectory(String)` or create multiple directories at once with
-`createDirectories(String...)`.
+If you need an empty directory on the SFTP server, you can use the
+`createDirectory()` function that accepts multiple string arguments depending on the desired number of directories.
+For example:
 
 [source,kotlin]
 ----
@@ -94,117 +95,124 @@ withSftpServer {
     "another/directory",
     "yet/another/directory"
   )
-  //code that reads from or writes to those directories
+
+  // code that reads from or writes to those directories
+  ...
 }
 ----
 
-=== Testing code that reads files
+=== Testing Code that Reads Files
 
-If you test code that reads files from an SFTP server then you need a server
-that provides these files.
-
-[source,kotlin]
-----
-@Test
-fun testReadingFiles() =
-  withSftpServer {
-    // add text file
-    putFile("directory/file.txt", "content of file")
-
-    // add binary file from input stream
-    val inputStream = getClass().getResourceAsStream("data.bin")
-    putFile("directory/fileFromInputStream.bin", inputStream)
-
-    //code that reads the file using the SFTP protocol
-  }
-----
-
-=== Testing code that writes files
-
-If you test code that writes files to an SFTP server, and then you need to verify
-the upload, use `getFileText` or `getFileBytes`
-
-[source,kotlin]
-----
-@Test
-fun testFiles() =
-  withSftpServer {
-    //code that uploads files using the SFTP protocol
-    val textFileContent = getFileText("directory/file.txt")
-    val binaryFileContent = getFileBytes("directory/file.bin")
-    //verify files content
-  }
-----
-
-=== Testing existence of files and directories, listing
-
-If you want to check whether a file was created or deleted then use get Path and
-verify whether it exists or not.
-
-[source,kotlin]
-----
-@Test
-fun testFile() 
-  withSftpServer {
-    //code that uploads or deletes the files
-    val path = getPath("directory/file.txt")
-    // now you can test on the path
-    path.exists
-    path.isDirectory
-    path.listDirectoryEntries("*.txt")
-  }
-----
-
-=== Delete all files
-
-If you want to reuse the SFTP server then you can delete all files and
-directories on the SFTP (This is rarely necessary because the function
-`withSftpServer` takes care that it starts and ends with a clean SFTP )
+If you test code that reads files from an SFTP server, then you need to make sure the server provides those files.
+The `putFile()` function can either create a file with the provided string content or read from an actual local file.
+For example:
 
 [source,kotlin]
 ----
 withSftpServer {
-  // creating files
-  deleteAllFilesAndDirectories()
-  // the rest of the test
+  // add a text file
+  putFile("directory/file.txt", "content of file")
+
+  // add a binary file from input stream
+  val inputStream = getClass().getResourceAsStream("data.bin")
+  putFile("directory/fileFromInputStream.bin", inputStream)
+
+  // code that reads the file using the SFTP protocol
+  ...
 }
 ----
 
-== Usage in flow testing (Utilihive specific)
+=== Testing Code that Writes Files
 
-Let's assume you have a flow that contains
-https://docs.utilihive.io/utilihive-integration/writing-testing-flows/processors/read-files/[readFiles]
-source processor that reads CSV files from SFTP server and processes it
-(typically using https://docs.utilihive.io/utilihive-integration/writing-testing-flows/processors/parse-csv/[parseCsv]).
-The example shows how to write a functional test (using JUnit) that uploads the
-CSV file to the SFTP (which then triggers file ingestion by the in-memory flow-server)
-and asserts that file has been moved from source folder (defined by `path` property)
-to folder for successfully read files (`moveToFolder` property). Typically, you will
-then want to test for what happens with the ingested CSV data further.
-
-Please note that your flow's readFiles processor needs `pollingFrequencySeconds`
-lower than `DEFAULT_TIMEOUT` used in the example otherwise the first file won't
-be read before the test times out.
+If you test code that writes files to an SFTP server, and you need to verify the upload of those files, use the `getFileText()` and `getFileBytes()` functions.
+For example:
 
 [source,kotlin]
 ----
-// helper extension function to verify source SFTP has moved file from 
-// 'source' folder over to the 'moveTo' folder
-// uses org.awaitility:awaitility
-private fun SftpServerTestContext.assertSourceFileProcessingSucceeded(
-    sourceFileContent: String,
-    sourceFilePath: String,
-    moveToFilePath: String,
-) {
-    await().atMost(DEFAULT_TIMEOUT).until {
-        with(this) {
-            existsFile(moveToFilePath) &&
-                    getFileText(moveToFilePath, UTF_8).contentEquals(sourceFileContent)
-        }
-    }
-    await().atMost(DEFAULT_TIMEOUT).until { !existsFile(sourceFilePath) }
-}
+withSftpServer {
+  // code that uploads files using the SFTP protocol
+  ...
 
+  // read file data
+  val textFileContent = getFileText("directory/file.txt")
+  val binaryFileContent = getFileBytes("directory/file.bin")
+
+  // verify contents
+  ...
+}
+----
+
+=== Testing Existence of Files and Directories
+
+If you want to verify the existence of a file or directory, or even the files that might exist within that directory, you can use the `getPath()` function.
+For example:
+
+[source,kotlin]
+----
+withSftpServer {
+  // code that uploads or deletes the files
+  ...
+
+  val path = getPath("directory/file.txt")
+
+  // test on the path
+  path.exists
+  path.isDirectory
+  path.listDirectoryEntries("*.txt")
+}
+----
+
+=== Deleting all Files
+
+If you want to reuse the SFTP server within the same test, you can delete all files and directories with the `deleteAllFilesAndDirectories()` function.
+For example:
+
+[source,kotlin]
+----
+withSftpServer {
+  // code that created several files
+  ...
+
+  deleteAllFilesAndDirectories()
+
+  // clean slate for the rest of the test
+  ...
+}
+----
+
+Note that this is rarely necessary, because the `withSftpServer` builder function ensures that the test starts and ends with a clean SFTP.
+
+=== Absolute vs Relative Paths
+
+The SFTP Server Stub supports both absolute paths (e.g., `/path/to/file`) and relative paths (e.g., `path/to/file`).
+Quite commonly, SFTP servers present clients with a limited view of the filesystem, where the root of what's available to the user is presented as `/`, and that is the initial directory where the user starts after login.
+In such a case, absolute and relative paths will behave effectively the same and point to the same place in the filesystem.
+
+If that's not your case, and the server puts you in a directory like `/home/myuser` after logging in, then you should set the path when initializing the context.
+For example:
+
+----
+withSftpServer(initialDirectory = "/home/myuser") {
+  ...
+}
+----
+
+Paths without a `/` prefix are interpreted relative to the given `initialDirectory`.
+In the example above, the path `/files/in` still points to `/files/in`, but the path `files/in` points to `/home/myuser/files/in`.
+
+== Usage in Flow Testing
+
+NOTE: This information only applies if you are specifically developing on the Utilihive platform.
+
+Let's assume you have a flow that contains a
+https://docs.utilihive.io/utilihive-integration/writing-testing-flows/processors/read-files/[readFiles]
+source processor that reads CSV files from an SFTP server and processes them (typically with a follow-up https://docs.utilihive.io/utilihive-integration/writing-testing-flows/processors/parse-csv/[parseCsv] processor).
+In this situation, you would want a functional test that uploads the CSV file to the SFTP server (which then triggers file ingestion by the in-memory flow-server) and asserts that the file has been moved from the source folder (defined by the `path` property) to the successfully read folder (defined by the `moveToFolder` property).
+
+The following example shows how you could accomplish this as a JUnit test:
+
+[source,kotlin]
+----
 @Test
 fun `WHEN putting file on sftp THEN file is read and moved to a correct directory`(
     ctx: ConcurrentTestContext
@@ -232,38 +240,47 @@ fun `WHEN putting file on sftp THEN file is read and moved to a correct director
           "move-to-path/test.csv",
         )
 
-        // some other testing you need to do
+        // other testing you need to do on the ingested csv data
+        ...
     }
 }
 ----
 
-=== Absolute vs relative paths
+In the above example, we've created a helper extension function called `assertSourceFileProcessingSucceeded()` to verify that the source SFTP has moved the file from the `source` folder to the `moveTo` folder.
+The helper uses `org.awaitility:awaitility` and looks like the following code:
 
-The SFTP Server Stub supports both absolute (`/path/to/file`) and relative (`path/to/file`) paths.
-Quite commonly SFTP servers present client with a limited view of the filesystem, where root of what's available to the user is presented as `/` and that is the initial directory where user starts after login.
-In such a case, absolute and relative paths will behave effectively the same and point to the same place in the filesystem.
-
-If that's not your case and your server presents you with let's say `/home/myuser` after logging in, then you should set the path when initializing the context.
+[source,kotlin]
 ----
-withSftpServer(initialDirectory = "/home/myuser") {
-  // ...
+private fun SftpServerTestContext.assertSourceFileProcessingSucceeded(
+    sourceFileContent: String,
+    sourceFilePath: String,
+    moveToFilePath: String,
+) {
+    await().atMost(DEFAULT_TIMEOUT).until {
+        with(this) {
+            existsFile(moveToFilePath) &&
+                getFileText(moveToFilePath, UTF_8).contentEquals(sourceFileContent)
+        }
+    }
+    await().atMost(DEFAULT_TIMEOUT).until { !existsFile(sourceFilePath) }
 }
 ----
-Paths without `/` prefix will be interpreted relative to given `initialDirectory`, so in the example above, `/files/in` will point to `/files/in` and `files/in` point to `/home/myuser/files/in`.
-In connection to flow testing you should keep in mind that the `readFiles` and
-`writeFiles` processors in Utilihive Flow Server always interpret property `path` as relative to that directory.
+
+Please note that your flow's `readFiles` processor must set the `pollingFrequencySeconds` property lower than the `DEFAULT_TIMEOUT` used in the example.
+Otherwise, the first file won't be read before the test times out.
 
 == Contributing
 
-If you have a feature request, found a bug or simply have a question about SFTP Server Stub.
+If you have a feature request, found a bug, or simply have a question about SFTP Server Stub, you can do the following:
 
 * https://github.com/utilihive/utilihive-backend-stub-sftp-server/issues[Create an issue]
- describing the bug and/or use case.
-* If you have a bug fix, you can create a pull request.
- (See https://guides.github.com/introduction/flow/index.html[Understanding the GitHub Flow])
- In such a case scenario must be covered by a unit test.
+describing the bug and/or use case.
+* Create a pull request for a bug fix.
+In such a case, the scenario must be covered by a unit test.
+See the https://docs.github.com/en/get-started/quickstart/github-flow[GitHub Flow guide] for more advice on collaborating on projects.
 
-== Building and releasing
-To release your code, create a pull request from your branch to `main`. Once someone approves it and merges to `main`,
-the GitHub workflow takes care of creating new version, tagging, signing and publishing to Maven Central repository,
-and creating a new GitHub release (uses `CHANGELOG.md` as description).
+== Building and Releasing
+
+To release your code, create a pull request from your branch to `main`.
+After someone approves it and merges to `main`, the GitHub workflow takes care of the versioning, tagging, signing, and publishing to the Maven Central repository.
+It also creates a new GitHub release (using the `CHANGELOG.md` file as the description).
