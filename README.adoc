@@ -34,7 +34,7 @@ You only need to add the following dependency to your project's `pom.xml` file:
 
 == Usage
 
-SFTP Server Stub is used by wrapping your test code with the `withSftpServer` builder function.
+SFTP Server Stub is used by wrapping your test code with the `withSftpServer` scope function.
 For example:
 
 [source,kotlin]
@@ -56,7 +56,7 @@ The test code uses the provided server object to obtain information about the ru
 
 By default, the SFTP server listens on an auto-allocated port.
 During the test, this port can be read from the `port` property.
-If you need to specify a custom port, you can pass an argument to the builder in the following manner:
+If you need to specify a custom port, you can pass an argument to the scope function in the following manner:
 
 [source,kotlin]
 ----
@@ -180,7 +180,7 @@ withSftpServer {
 }
 ----
 
-Note that this is rarely necessary, because the `withSftpServer` builder function ensures that the test starts and ends with a clean SFTP.
+Note that this is rarely necessary, because the `withSftpServer` scope function ensures that the test starts and ends with a clean SFTP.
 
 === Absolute vs Relative Paths
 
