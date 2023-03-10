@@ -26,7 +26,7 @@ You only need to add the following dependency to your project's `pom.xml` file:
 ----
 <dependency>
   <groupId>com.greenbird.utilihive.stubs</groupId>
-  <artifactId>utilihive-backend-stub-sftp-server</artifactId>
+  <artifactId>utilihive-backend-stub-sftp</artifactId>
   <version>LATEST_VERSION</version>
   <scope>test</scope>
 </dependency>
@@ -218,27 +218,27 @@ fun `WHEN putting file on sftp THEN file is read and moved to a correct director
     ctx: ConcurrentTestContext
 ) = withSftpServer {
     ctx.addFlowTestConfig {
-        resource(/*...*/)
-        authConfig(/*...*/)
+        authConfig(...)
         flow(mySftpSourceFlow)
     }
 
     flowTest(ctx) {
-        val sourceCsvFileContent = "column1;column2\nval1;val2\nval3;val4"
-        createDirectories("source-path", "move-to-path", "error-path")
-        putFile("source-path/test.csv", sourceCsvFileContent, UTF_8)
+        val sourceFileContent = "column1;column2\nval1;val2\nval3;val4"
+        val sourceFilePath = "source-path"
+        val moveToFilePath = "move-to-path"
 
-        logAsserter.awaitEvent {
-            logger = LoggerNames.FLOW_SOURCE
-            flowId = SFTP_SOURCE_FLOW_ID
-            messagePhrase("Received MessageAckDto")
+        // set up directories and file content
+        createDirectories(sourceFilePath, moveToFilePath)
+        putFile("$sourceFilePath/test.csv", sourceFileContent, UTF_8)
+
+        // verify that file was consumed from source location
+        await().atMost(DEFAULT_TIMEOUT).until { !getPath("$sourceFilePath/test.csv").exists() }
+
+        // verify that file was moved
+        await().atMost(DEFAULT_TIMEOUT).until {
+            getPath(moveToFilePath).exists() &&
+                getFileText("$moveToFilePath/test.csv", UTF_8).contentEquals(sourceFileContent)
         }
-
-        assertSourceFileProcessingSucceeded(
-          sourceCsvFileContent,
-          "source-path/test.csv",
-          "move-to-path/test.csv",
-        )
 
         // other testing you need to do on the ingested csv data
         ...
@@ -246,27 +246,8 @@ fun `WHEN putting file on sftp THEN file is read and moved to a correct director
 }
 ----
 
-In the above example, we've created a helper extension function called `assertSourceFileProcessingSucceeded()` to verify that the source SFTP has moved the file from the `source` folder to the `moveTo` folder.
-The helper uses `org.awaitility:awaitility` and looks like the following code:
-
-[source,kotlin]
-----
-private fun SftpServerTestContext.assertSourceFileProcessingSucceeded(
-    sourceFileContent: String,
-    sourceFilePath: String,
-    moveToFilePath: String,
-) {
-    await().atMost(DEFAULT_TIMEOUT).until {
-        with(this) {
-            existsFile(moveToFilePath) &&
-                getFileText(moveToFilePath, UTF_8).contentEquals(sourceFileContent)
-        }
-    }
-    await().atMost(DEFAULT_TIMEOUT).until { !existsFile(sourceFilePath) }
-}
-----
-
-Please note that your flow's `readFiles` processor must set the `pollingFrequencySeconds` property lower than the `DEFAULT_TIMEOUT` used in the example.
+The above example uses the `org.awaitility:awaitility` library to help with asynchronous testing.
+Please note that your flow's `readFiles` processor must set the `pollingFrequencySeconds` property lower than the `DEFAULT_TIMEOUT` used for the `await()` duration.
 Otherwise, the first file won't be read before the test times out.
 
 == Contributing
