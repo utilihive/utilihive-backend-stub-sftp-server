@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -34,30 +35,30 @@
     </licenses>
 
     <properties>
-        <annotations.version>23.1.0</annotations.version>
-        <apache-sshd.version>2.9.2</apache-sshd.version>
-        <assertj.version>3.23.1</assertj.version>
-        <commons-io.version>2.11.0</commons-io.version>
-        <dokka.version>1.7.20</dokka.version>
+        <annotations.version>24.1.0</annotations.version>
+        <apache-sshd.version>2.12.0</apache-sshd.version>
+        <assertj.version>3.25.2</assertj.version>
+        <commons-io.version>2.15.1</commons-io.version>
+        <dokka.version>1.9.10</dokka.version>
         <hubspot-dependency-management-plugin.version>0.4</hubspot-dependency-management-plugin.version>
         <jdk.version>11</jdk.version>
-        <jsch.version>0.2.6</jsch.version>
-        <junit.version>5.9.1</junit.version>
-        <kotlin.version>1.8.0</kotlin.version>
+        <jsch.version>0.2.16</jsch.version>
+        <junit.version>5.10.1</junit.version>
+        <kotlin.version>1.9.22</kotlin.version>
         <maven-build-info.version>1.3</maven-build-info.version>
-        <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
-        <maven-dependency.version>3.3.0</maven-dependency.version>
-        <maven-deploy-plugin.version>3.0.0</maven-deploy-plugin.version>
-        <maven-detekt.version>1.22.0</maven-detekt.version>
-        <maven-enforcer.version>3.1.0</maven-enforcer.version>
-        <maven-gpg.version>1.6</maven-gpg.version>
-        <maven-install-plugin.version>3.1.0</maven-install-plugin.version>
-        <maven-release.version>3.0.0-M6</maven-release.version>
-        <maven-source.version>3.2.1</maven-source.version>
-        <maven-surefire.version>3.0.0-M7</maven-surefire.version>
-        <memoryfilesystem.version>2.4.0</memoryfilesystem.version>
-        <nexus-staging-maven.version>1.6.7</nexus-staging-maven.version>
-        <slf4j.version>2.0.1</slf4j.version>
+        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
+        <maven-dependency.version>3.6.1</maven-dependency.version>
+        <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
+        <maven-detekt.version>1.23.4</maven-detekt.version>
+        <maven-enforcer.version>3.4.1</maven-enforcer.version>
+        <maven-gpg.version>3.1.0</maven-gpg.version>
+        <maven-install-plugin.version>3.1.1</maven-install-plugin.version>
+        <maven-release.version>3.0.1</maven-release.version>
+        <maven-source.version>3.3.0</maven-source.version>
+        <maven-surefire.version>3.2.5</maven-surefire.version>
+        <memoryfilesystem.version>2.8.0</memoryfilesystem.version>
+        <nexus-staging-maven.version>1.6.13</nexus-staging-maven.version>
+        <slf4j.version>2.0.11</slf4j.version>
         <sonatype-ossindex-maven-enforcer-rules.version>3.2.0</sonatype-ossindex-maven-enforcer-rules.version>
 
         <!-- Maven plugins -->
@@ -75,7 +76,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <dependencyManagement />
+    <dependencyManagement/>
 
     <dependencies>
         <!-- Kotlin -->
@@ -376,11 +377,13 @@
                             <fail>true</fail>
                             <rules>
                                 <!-- Security scanning -->
-                                <banVulnerable implementation="org.sonatype.ossindex.maven.enforcer.BanVulnerableDependencies">
+                                <banVulnerable
+                                        implementation="org.sonatype.ossindex.maven.enforcer.BanVulnerableDependencies">
                                     <cvssScoreThreshold>7.0</cvssScoreThreshold>
                                 </banVulnerable>
                                 <!-- Enforce dependency management -->
-                                <dependencyManagementRule implementation="com.hubspot.maven.plugins.dependency.management.DependencyManagementRule">
+                                <dependencyManagementRule
+                                        implementation="com.hubspot.maven.plugins.dependency.management.DependencyManagementRule">
                                     <requireManagement>
                                         <dependencies>false</dependencies>
                                         <plugins>false</plugins>
